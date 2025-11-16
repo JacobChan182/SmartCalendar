@@ -1,56 +1,87 @@
 # SmartCalendar
 
-_A local-first desktop calendar with a realistic month grid, powerful event management, optional weather overlay, and color-scheme suggestions for daily planning._
+_A local-first desktop calendar with a realistic month grid, fast event workflows, optional weather overlay, and color-scheme suggestions._
+
+---
 
 ## Overview
-SmartCalendar is a Java desktop app focused on **speed, privacy, and offline usability**. It shows a real-world month grid (28–31 cells), supports event CRUD and reminders, and (optionally) overlays local weather and lightweight color-scheme ideas to help with day planning. No cloud account is required; data stays on your device.
+SmartCalendar is a **privacy-first** Java desktop app. It renders a **real month grid (28/29/30/31 cells)**, supports event CRUD and reminders, and (optionally) overlays local weather and lightweight color palettes for day planning. No cloud account is required; data stays on your device.
 
-## Key Features
-- **Real Month View**: 28–31 day grid, keyboard and mouse navigation.
-- **Events & Reminders**: Create, edit, delete; all-day/multi-day; flexible advance reminders (e.g., 10 min before, on time).
-- **Jump to Date**: Quick navigation to any date.
-- **Local-First Storage**: JSON or SQLite (configurable), easy import/export.
-- **(Planned) Weather Overlay**: Daily/hourly weather overlay driven by latitude/longitude or city.
-- **(Planned) Color Suggestions**: Simple color palettes to inspire outfits/notes/themes.
-- **(Planned) Auto Location**: Ask permission, then try GPS/system/network-based location with safe fallbacks.
-- **Privacy by Default**: Location (if enabled) is used locally and never uploaded.
+---
+
+## Maven Coordinates (Project Root)
+The project is a multi-module Maven build. Parent POM coordinates:
+
+```xml
+<groupId>TUT0101-1</groupId>
+<artifactId>smartcalendar-parent</artifactId>
+<version>1.0</version>
+<packaging>pom</packaging>
+```
+
+Example dependency from `app-fx` to `core`:
+
+```xml
+<dependency>
+  <groupId>TUT0101-1</groupId>
+  <artifactId>core</artifactId>
+  <version>${project.version}</version>
+</dependency>
+```
+
+---
 
 ## Status & Roadmap
-- [x] Core/CA engine foundation
-- [ ] Month grid UI (JavaFX)
+- [x] Clean Architecture core (domain/use cases)
+- [x] JavaFX app module boots successfully
+- [ ] Month grid UI (realistic 28–31 cells)
 - [ ] Event CRUD end-to-end
 - [ ] Reminder engine (local notifications)
-- [ ] Weather overlay (Open-Meteo or similar)
-- [ ] Color scheme panel (The Color API or similar)
-- [ ] Auto location & permission flow
+- [ ] Weather overlay (Open-Meteo)
+- [ ] Color suggestions panel (The Color API)
+- [ ] Auto location + permission flow
 
 **Milestones**
 1. **M1** Core models + storage + month grid
-2. **M2** Full event CRUD + reminder engine
+2. **M2** Full CRUD + reminder engine
 3. **M3** Weather overlay + units (°C/°F)
 4. **M4** Color suggestions panel
 5. **M5** Auto location + privacy dialog
 
-## Tech Stack
-- **Language**: Java (17+)
-- **UI**: JavaFX (FXML + Controllers)
-- **Build**: Gradle (recommended) or Maven
-- **Tests**: JUnit (plus Mockito if needed)
-- **HTTP**: Java 11+ `HttpClient` (or Retrofit/OkHttp if preferred)
-- **Persistence**: JSON or SQLite (choose one per build)
+---
 
-## Architecture
+## Tech Stack
+- **JDK:** **21** (project standard)
+- **UI:** JavaFX (FXML + Controllers)
+- **Build:** **Maven** (multi-module: `core`, `app-fx`)
+- **Tests:** JUnit (Mockito optional)
+- **HTTP:** `java.net.http.HttpClient`
+- **Persistence:** JSON or SQLite (TBD, pick per build)
+
+---
+
+## Project Structure
 ```
-smartcalendar/
-├─ app/            # App bootstrap & dependency wiring
-├─ core/           # Domain: entities, use cases, services, ports
-├─ infra/          # Adapters: storage, HTTP clients, system location
-├─ ui/             # JavaFX views (FXML), controllers, view-models
-└─ shared/         # Common utils: time, result types, errors
+SmartCalendar/
+├─ core/                 # Domain & use cases (UI-agnostic)
+│  └─ src/...
+├─ app-fx/               # JavaFX UI (depends on core)
+│  └─ src/main/java/com/smartcalendar/fx/App.java
+├─ docs/plantuml/        # Diagrams (optional)
+├─ pom.xml               # Parent POM (aggregates modules)
+└─ README.md
 ```
-**Clean boundaries**: `core` is UI-agnostic; `ui` talks to `core` via interfaces; `infra` implements ports like `EventRepository`, `WeatherClient`, `ColorSchemeClient`, `LocationProvider`.
+
+**Boundaries:** `core` exposes interfaces/DTOs; `app-fx` talks to `core` only via those interfaces. Future adapters (storage, HTTP, location) implement ports.
+
+---
 
 ## Getting Started (Development)
+
+### 0) Prerequisites
+- Install **JDK 21**.
+- In IntelliJ IDEA: set **Project SDK = JDK 21**.
+- Import the project **as Maven** from the **root `pom.xml`** (then click *Reimport* once).
 
 ### 1) Clone
 ```bash
@@ -58,95 +89,116 @@ git clone https://github.com/JacobChan182/SmartCalendar.git
 cd SmartCalendar
 ```
 
-### 2) JDK
-- Install **JDK 17+**.
-- In IntelliJ IDEA, set the Project SDK to your JDK 17+.
-
-### 3) Gradle Setup (JavaFX)
-_Add this minimal build file if you don’t have one yet (adjust `mainClass` to your package/class name)._
-
-```gradle
-plugins {
-    id 'application'
-}
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation "org.openjfx:javafx-controls:21"
-    implementation "org.openjfx:javafx-fxml:21"
-    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0"
-}
-
-application {
-    // Replace with your actual main class:
-    mainClass = "com.smartcalendar.app.Main"
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-```
-
-### 4) Run
+### 2) Build
 ```bash
-./gradlew clean run
+# Build all modules and install core to local Maven repo
+mvn -q -DskipTests install
 ```
-First launch will create a local data folder (e.g., `~/.smartcalendar/`).
 
-## Configuration
-- **Units**: `C` or `F`.
-- **Location**:
-    - `auto = true` will try system/GPS/network location (with permission).
-    - Fallbacks: last known position or manual city/lat-lon.
-- **Storage**:
-    - JSON: simple files (portable, easy to diff).
-    - SQLite: single-file DB (robust queries, concurrency-safe).
-- **Reminders**: per-event advance offsets (e.g., 10m, 1h, 1d).
-- **Privacy**: location never leaves the device; auto-location can be disabled anytime.
+### 3) Run the JavaFX app
+```bash
+# Run only the UI module (will build core automatically)
+mvn -q -pl app-fx -am javafx:run
+```
+**IDE equivalent:** Maven tool window → run root **install**, then in **app-fx → Plugins → javafx → javafx:run**.
+
+> The current entry point is `com.smartcalendar.fx.App`, which shows a minimal window. Replace the center content with the month grid and hook up use cases from `core`.
+
+---
+
+## Configuration (planned)
+- **Units:** `C` / `F`
+- **Location:** `auto=true` tries system/GPS/network; fallbacks to last known or manual lat/lon
+- **Storage:** `json` (simple/debuggable) or `sqlite` (robust single-file DB)
+- **Privacy:** location is local-only and can be disabled anytime
+
+---
 
 ## Development Guide
-- **Branching**: `main` (stable); feature branches `feat/...`; fixes `fix/...`.
-- **Commits**: `feat:`, `fix:`, `test:`, `docs:`, `refactor:`.
-- **Issues**: add steps to reproduce, expected/actual, logs/screenshots.
-- **Style**: Google Java Style or team convention (optionally enforce via Spotless/IDE).
-- **UI Notes**: Month view uses a real calendar grid (28–31 cells). Use FXML + Scene Builder for fast iteration.
+- **Branching:** `main` (stable), `feat/*` (features), `fix/*` (bug fixes)
+- **Commit style:** `feat: …`, `fix: …`, `docs: …`, `test: …`, `refactor: …`
+- **PRs:** reference related issues; include screenshots/GIFs for UI changes
+- **UI conventions:** only the current month’s valid cells (no 6×7 gray overflow); header `<  Year Month  >`; right pane for **day events** and **day weather**
+- **Accessibility:** color tiles contrast ≥ 3:1; keyboard navigation supported
+
+---
 
 ## Testing
-- **Unit**: core use cases (event CRUD, reminder timing, parsers).
-- **Contract**: API adapters (weather/color) with mock servers.
-- **UI (minimal)**: critical flows (create/edit, drag-resize, date jump).
 ```bash
-./gradlew test
+mvn -q test
+```
+- **core:** unit tests for entities/use cases
+- **infra (when added):** contract tests for gateways (e.g., via WireMock)
+- **ui (minimal):** smoke tests of critical flows (create/edit, jump to date)
+
+---
+
+## Why JavaFX (over Swing)
+- Faster layout with **FXML + Scene Builder**
+- Rich controls (TableView, DatePicker, Dialog)
+- CSS-like styling, HiDPI/retina friendly
+- Can embed legacy Swing via `SwingNode` during transition
+
+---
+
+## Troubleshooting
+
+**`No plugin found for prefix 'javafx'`**  
+`app-fx/pom.xml` is missing the plugin or the Maven view wasn’t reimported. Ensure:
+```xml
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.openjfx</groupId>
+      <artifactId>javafx-maven-plugin</artifactId>
+      <version>0.0.8</version>
+      <configuration>
+        <mainClass>com.smartcalendar.fx.App</mainClass>
+      </configuration>
+    </plugin>
+  </plugins>
+</build>
 ```
 
-## Design Notes
-- **Why JavaFX (vs Swing)**: modern FXML layout, rich controls (TableView, DatePicker, Dialog), CSS-like styling, Scene Builder drag-and-drop, strong HiDPI support.
-- **Local-First**: fast start, offline support, user-controlled backups.
-- **Extensibility**: ports/adapters make it easy to swap storage or APIs.
+**`module javafx.controls not found`**  
+Launch via **`mvn javafx:run`** (the plugin sets the module path). Don’t just run `main()` without VM options.
 
-## Contributing
-1. Open an issue and describe the change.
-2. Create a `feat/...` branch from `main`.
-3. Add tests for new behavior.
-4. Submit a PR; link related issue(s); include screenshots for UI changes.
+**`Error: Output directory is empty`**  
+`app-fx/src/main/java` has no sources. Add `com.smartcalendar.fx.App` (or update `mainClass` accordingly).
+
+**`error: release version 21 not supported`**  
+Maven is using a non-21 JDK. Fix by using JDK 21 for Maven:
+- Command line (temporary):
+  ```bash
+  setx JAVA_HOME "C:\Program Files\Java\jdk-21"
+  ```
+  or set `JAVA_HOME` and PATH for the session.
+- IntelliJ: **Settings → Build Tools → Maven → Runner → JRE = JDK 21**.
+
+**`app-fx` cannot resolve `core`**  
+Run a full build first: `mvn -q -DskipTests install`, or run with `-pl app-fx -am` so Maven builds dependencies automatically.
+
+---
+
+## Contribution Workflow
+1. Open an issue; outline motivation and approach.
+2. Branch from `main` → `feat/...` or `fix/...`.
+3. Add/adjust tests.
+4. Submit PR; tag module(s) affected (`core`, `app-fx`, `infra`).
+
+---
 
 ## FAQ
-**Q: Do I need a Google account or Google Calendar API?**  
-A: No. SmartCalendar is **local-only**. External APIs are optional (weather/color only).
+**Do I need Google Calendar or any account?**  
+No. The app is **local-only**. External APIs are optional (weather/colors).
 
-**Q: Will GPS constantly run?**  
-A: No. If enabled, location is requested on demand with clear user consent and can be disabled anytime.
+**Will GPS run continuously?**  
+No. If enabled, location is requested on demand with explicit consent and can be turned off anytime.
 
-**Q: Where is my data stored?**  
-A: In your home directory (e.g., `~/.smartcalendar/`) or a custom path you configure.
+**Where is my data stored?**  
+In your home directory (e.g., `~/.smartcalendar/`) or a custom path you configure.
+
+---
 
 ## License
-MIT (or update to your course’s required license).
-
-## Credits
-- JavaFX community and tooling.
-- (Planned) Weather: Open-Meteo (or similar).
-- (Planned) Colors: The Color API (or similar).
+**All rights reserved. No license granted.**
