@@ -1,0 +1,138 @@
+.root { -fx-font-size: 14px; }
+.month-grid { -fx-padding: 10; }
+.weekday { -fx-font-weight: bold; -fx-opacity: 0.7; }
+
+
+.day-cell {
+    -fx-padding: 8;
+    -fx-background-color: -fx-base;
+    -fx-background-radius: 8;
+}
+.day-cell:hover { -fx-background-color: derive(-fx-base, 10%); }
+.day-cell.selected {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+}
+
+.day-num { -fx-font-weight: bold; }
+.event-dots { -fx-min-height: 6; -fx-max-height: 6; }
+
+
+
+.month-grid { -fx-padding: 10; }
+.day-cell { -fx-padding: 8; -fx-background-radius: 8; }
+
+
+
+.title {
+    -fx-font-size: 30px;   /* 24~32 自行调 */
+    -fx-font-weight: 800;
+}
+.toolbar {
+    -fx-padding: 12 16;    /* 上下左右内边距，视觉更舒服 */
+}
+
+/* 每天小格子的排版 */
+.day-cell {
+    -fx-padding: 10;
+    -fx-background-color: #000000;
+    -fx-background-radius: 12;
+}
+.day-cell.selected {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+}
+.day-num {
+    -fx-font-weight: 700;
+    -fx-opacity: 0.9;
+}
+
+/* 事件容器和 pill */
+.event-box { /* 容器 */
+    -fx-spacing: 4;
+}
+.event-pill {
+    -fx-padding: 2 8;
+    -fx-background-radius: 10;
+    -fx-font-size: 11px;
+    -fx-max-width: infinity;
+    -fx-text-overrun: ellipsis;
+}
+/* 类别色（可按你们的学科/类型定义） */
+/* 蓝色（课程）——半透明背景 + 细边框 */
+.pill-course  {
+    -fx-background-color:
+        rgba(86,160,255,0.18),          /* 外层淡色雾感 */
+        rgba(86,160,255,0.35);          /* 里层稍实一些 */
+    -fx-background-insets: 0, 1;        /* 两层叠加 */
+    -fx-background-radius: 10, 9;
+    -fx-border-color: rgba(86,160,255,0.55);
+    -fx-border-radius: 10;
+    -fx-text-fill: #dbe9ff;
+}
+/* 绿色（工作/学习） */
+.pill-work {
+    -fx-background-color: rgba(40,199,111,0.20), rgba(40,199,111,0.35);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 10, 9;
+    -fx-border-color: rgba(40,199,111,0.55);
+    -fx-border-radius: 10;
+    -fx-text-fill: #d7ffe7;
+}
+
+/* 紫色（日常/生活） */
+.pill-life {
+    -fx-background-color: rgba(157,106,255,0.18), rgba(157,106,255,0.35);
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 10, 9;
+    -fx-border-color: rgba(157,106,255,0.55);
+    -fx-border-radius: 10;
+    -fx-text-fill: #efe6ff;
+}
+
+/* “+n” 更多标签 */
+.event-more {
+    -fx-font-size: 11px;
+    -fx-text-fill: #a8b0b9;
+}
+/* 整体背景（Scene 根节点） */
+.root {
+    -fx-background-color: #121212;      /* 整体深色 */
+}
+
+/* 顶部栏与右侧栏 */
+.toolbar { -fx-padding: 12 16; }
+.sidebar { -fx-background-color: #121212; }
+
+/* 月份网格与单元格 */
+.month-grid { -fx-padding: 10; }
+.weekday { -fx-text-fill: #c9c9c9; -fx-font-weight: 700; }
+
+.day-cell {
+    -fx-padding: 10;
+    -fx-background-color: #1a1a1a;      /* 深灰 */
+    -fx-background-radius: 12;
+}
+.day-cell:hover    { -fx-background-color: #232323; }
+.day-cell.selected {
+    -fx-background-color: #0ea5e9;      /* 高亮色 */
+    -fx-text-fill: white;
+}
+.day-num { -fx-font-weight: 800; -fx-text-fill: #e6e6e6; }
+
+/* 右侧 ListView 也要深色 */
+.list-view {
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;  /* 让它继承 root 的深色 */
+}
+.list-cell {
+    -fx-background-color: #1a1a1a;
+    -fx-text-fill: #eaeaea;
+}
+.list-cell:empty { -fx-background-color: transparent; }
+.list-cell:selected {
+    -fx-background-color: #2a7fff;
+    -fx-text-fill: white;
+}
+.button { -fx-background-color: #2a2a2a; -fx-text-fill: #eee; }
+.scroll-bar:vertical, .scroll-bar:horizontal { -fx-background-color: #121212; }
