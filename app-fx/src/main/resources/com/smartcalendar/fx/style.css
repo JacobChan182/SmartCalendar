@@ -25,14 +25,15 @@
 
 
 .title {
-    -fx-font-size: 30px;   /* 24~32 自行调 */
+    -fx-font-size: 30px;   /* CN: 24~32 自行调 EN: font size */
     -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
 }
 .toolbar {
-    -fx-padding: 12 16;    /* 上下左右内边距，视觉更舒服 */
+    -fx-padding: 12 16;    /* CN: 上下左右内边距，视觉更舒服 EN: Top, bottom, left and right padding*/
 }
 
-/* 每天小格子的排版 */
+/* CN：每天小格子的排版 EN: composing of blocks */
 .day-cell {
     -fx-padding: 10;
     -fx-background-color: #000000;
@@ -47,8 +48,8 @@
     -fx-opacity: 0.9;
 }
 
-/* 事件容器和 pill */
-.event-box { /* 容器 */
+/* CN: 事件容器和 pill EN: event container and pill */
+.event-box {
     -fx-spacing: 4;
 }
 .event-pill {
@@ -58,19 +59,19 @@
     -fx-max-width: infinity;
     -fx-text-overrun: ellipsis;
 }
-/* 类别色（可按你们的学科/类型定义） */
-/* 蓝色（课程）——半透明背景 + 细边框 */
+/* CN: 类别色（可按你们的学科/类型定义）EN: color for each category */
+/* CN:蓝色（课程）——半透明背景 + 细边框 EN: class in blue*/
 .pill-course  {
     -fx-background-color:
-        rgba(86,160,255,0.18),          /* 外层淡色雾感 */
-        rgba(86,160,255,0.35);          /* 里层稍实一些 */
-    -fx-background-insets: 0, 1;        /* 两层叠加 */
+        rgba(86,160,255,0.18),          /*CN: 外层淡色雾感 EN: outer color */
+        rgba(86,160,255,0.35);          /* Inner color */
+    -fx-background-insets: 0, 1;        /* addon */
     -fx-background-radius: 10, 9;
     -fx-border-color: rgba(86,160,255,0.55);
     -fx-border-radius: 10;
     -fx-text-fill: #dbe9ff;
 }
-/* 绿色（工作/学习） */
+/* CN: 绿色（工作/学习） EN: green for work and study*/
 .pill-work {
     -fx-background-color: rgba(40,199,111,0.20), rgba(40,199,111,0.35);
     -fx-background-insets: 0, 1;
@@ -80,7 +81,7 @@
     -fx-text-fill: #d7ffe7;
 }
 
-/* 紫色（日常/生活） */
+/* CN: 紫色（日常/生活） EN: Purple for life */
 .pill-life {
     -fx-background-color: rgba(157,106,255,0.18), rgba(157,106,255,0.35);
     -fx-background-insets: 0, 1;
@@ -90,40 +91,40 @@
     -fx-text-fill: #efe6ff;
 }
 
-/* “+n” 更多标签 */
+/* CN:“+n” 更多标签 EN: the "+n" */
 .event-more {
     -fx-font-size: 11px;
     -fx-text-fill: #a8b0b9;
 }
-/* 整体背景（Scene 根节点） */
+/* Background color */
 .root {
-    -fx-background-color: #121212;      /* 整体深色 */
+    -fx-background-color: #121212;      /* Dark theme */
 }
 
-/* 顶部栏与右侧栏 */
+/* Toolbar and Sidebar */
 .toolbar { -fx-padding: 12 16; }
 .sidebar { -fx-background-color: #121212; }
 
-/* 月份网格与单元格 */
+/* Month and weekday */
 .month-grid { -fx-padding: 10; }
 .weekday { -fx-text-fill: #c9c9c9; -fx-font-weight: 700; }
 
 .day-cell {
     -fx-padding: 10;
-    -fx-background-color: #1a1a1a;      /* 深灰 */
+    -fx-background-color: #1a1a1a;      /* dark grey */
     -fx-background-radius: 12;
 }
 .day-cell:hover    { -fx-background-color: #232323; }
 .day-cell.selected {
-    -fx-background-color: #0ea5e9;      /* 高亮色 */
+    -fx-background-color: #0ea5e9;      /* Highlight */
     -fx-text-fill: white;
 }
 .day-num { -fx-font-weight: 800; -fx-text-fill: #e6e6e6; }
 
-/* 右侧 ListView 也要深色 */
+/* right side ListView */
 .list-view {
     -fx-background-insets: 0;
-    -fx-background-color: transparent;  /* 让它继承 root 的深色 */
+    -fx-background-color: transparent;  /* inherit the dark mode from root */
 }
 .list-cell {
     -fx-background-color: #1a1a1a;

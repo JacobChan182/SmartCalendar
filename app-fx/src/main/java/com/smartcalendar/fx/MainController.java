@@ -65,25 +65,25 @@ public class MainController {
         VBox box = new VBox(4);
         box.getStyleClass().add("day-cell");
         box.setFillWidth(true);
-        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // 关键：允许拉伸
+        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // CH：关键：允许拉伸 EN: Key feature: allows stretching
         GridPane.setHgrow(box, Priority.ALWAYS);
         GridPane.setVgrow(box, Priority.ALWAYS);
 
         Label title = new Label(Integer.toString(date.getDayOfMonth()));
         title.getStyleClass().add("day-num");
 
-        VBox eventBox = new VBox(4);             // 事件容器
+        VBox eventBox = new VBox(4);             // CN: 事件容器 EN: Event container
         eventBox.getStyleClass().add("event-box");
 
         box.getChildren().addAll(title, eventBox);
 
-        // 初次渲染就填充事件（避免你说的“点一下才刷新”的问题）
+        // CN: 初次渲染就填充事件 EN: load and render the events at the beginning
         fillEventPills(eventBox, date);
 
         box.setOnMouseClicked(e -> {
             selectDay(date);
-            // 右侧列表刷新
-            refreshDayDetails();                  // 你之前加的
+            // CN: 右侧列表刷新 EN: right side list refresh
+            refreshDayDetails();
         });
 
         if (date.equals(selected)) box.getStyleClass().add("selected");
@@ -92,8 +92,8 @@ public class MainController {
 
     private void selectDay(LocalDate date) {
         selected = date;
-        refreshDayDetails();        // 点击时也刷新
-        renderMonth();              // 如果不需要重画整月，可删掉这行以避免频繁重绘
+        refreshDayDetails();        // CN: 点击时也刷新 EN: refresh when clicking
+        renderMonth();
     }
     private void refreshDayDetails() {
         List<String> display = getEventsFor(selected).stream()
@@ -101,17 +101,17 @@ public class MainController {
                 .toList();
         dayEvents.getItems().setAll(display);
     }
-    // 轻量事件模型（你接 core 后可替换为真实 Event）
+    //TODO CN: 轻量事件模型（你接 core 后可替换为真实 Event） EN: Event interface, replace it when core is done
     static class EventItem {
-        final String title;      // 展示文本（含时间或科目）
-        final String category;   // 用于着色（如 "course", "exam", "life"...）
+        final String title;      // CN: 展示文本（含时间或科目）EN: title for showing
+        final String category;   // CN:用于着色（如 "course", "exam", "life"...） EN: Category for giving colors
         EventItem(String title, String category) {
             this.title = title; this.category = category;
         }
     }
-    // 取当天事件（先用假数据；接 core 后替换）
+    //TODO CN: 取当天事件（先用假数据；接 core 后替换）EN: Get events for the specific day, replace when Event class is ready
     private List<EventItem> getEventsFor(LocalDate date) {
-        // demo：给某些日期塞点数据
+        // demo：some test data
         if (date.getDayOfMonth() % 7 == 0)
             return List.of(new EventItem("CSC207H • 14:00", "course"),
                     new EventItem("MUS207H • 16:00", "course"),
@@ -123,20 +123,20 @@ public class MainController {
                     new EventItem("Gym 19:00", "life"));
         return List.of();
     }
-    // 创建一个“事件 pill”标签
+    // CN: 创建一个“事件 pill”标签 EN: make a "eventpill" for those blocks
     private Label makePill(EventItem e) {
         Label pill = new Label(e.title);
-        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // 颜色按类别
+        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // CN：颜色按类别 EN：colors-category
         pill.setMaxWidth(Double.MAX_VALUE);
-        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // 超长省略号
+        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // CN: 超长省略号 EN: Extra-long ellipsis
         return pill;
     }
-    // 给一个日期的事件容器填充 2–3 条 pill，并附加 +n
+    // CN: 给一个日期的事件容器填充 2–3 条 pill，并附加 +n EN: each day block will have 2-3 pills, rest shows as +n
     private void fillEventPills(VBox eventBox, LocalDate date) {
         eventBox.getChildren().clear();
 
         List<EventItem> list = getEventsFor(date);
-        int limit = 3;                      // 每格最多展示数量
+        int limit = 3;                      // CN: 每格最多展示数量 EN: Maximum number of pills in each block
         int shown = Math.min(limit, list.size());
 
         for (int i = 0; i < shown; i++) {
@@ -148,7 +148,7 @@ public class MainController {
             moreLbl.getStyleClass().add("event-more");
             eventBox.getChildren().add(moreLbl);
 
-            // 鼠标悬停 tooltip 展示全部
+            // CN：鼠标悬停 tooltip 展示全部 EN：mouse hover to show all info
             String all = list.stream().map(it -> "• " + it.title).reduce((a,b)->a+"\n"+b).orElse("");
             Tooltip.install(eventBox, new Tooltip(all));
         }
