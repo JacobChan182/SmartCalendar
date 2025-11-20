@@ -34,19 +34,20 @@ Example dependency from `app-fx` to `core`:
 ## Status & Roadmap
 - [x] Clean Architecture core (domain/use cases)
 - [x] JavaFX app module boots successfully
-- [ ] Month grid UI (realistic 28–31 cells)
+- [x] Month grid UI (realistic 28–31 cells)
+- [x] **Event pills** in each day cell: show 2–3 items, overflow as “+n” with tooltip
+- [x] Basic theming (light/dark groundwork)
 - [ ] Event CRUD end-to-end
-- [ ] Reminder engine (local notifications)
 - [ ] Weather overlay (Open-Meteo)
 - [ ] Color suggestions panel (The Color API)
-- [ ] Auto location + permission flow
+- [ ] User typed location + permission flow
 
 **Milestones**
-1. **M1** Core models + storage + month grid
-2. **M2** Full CRUD + reminder engine
-3. **M3** Weather overlay + units (°C/°F)
-4. **M4** Color suggestions panel
-5. **M5** Auto location + privacy dialog
+1. **M1 (UI base)** multi-module + JavaFX boot + month grid + navigation + pills & Day details
+2. **M2 (Core features)** Full CRUD + persistence (JSON/SQLite)
+3. **M3 (Enhancements)** Weather overlay in C°
+4. **M4 (Polish)** Color suggestions panel
+5. **M5 (Integration)** User typed location + privacy dialog
 
 ---
 
