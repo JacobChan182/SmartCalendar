@@ -1,21 +1,18 @@
 package use_case.get_current_weather;
 
-import entity.Location;
 import entity.WeatherInfo;
 
 /**
- * Port interface for accessing weather data through an external API.
- * Implementations live in the frameworks_and_drivers layer.
+ * Port used by the interactor to fetch weather data from an external API.
  */
 public interface WeatherApiGateway {
 
     /**
-     * Resolve a city/address string to a geographic location.
+     * Fetch current weather for a given city and country.
+     *
+     * @param city    city name
+     * @param country country name or ISO code (may be null/blank)
      */
-    Location resolveLocation(String address) throws WeatherGatewayException;
-
-    /**
-     * Fetch current weather and today's min/max temperature for a location.
-     */
-    WeatherInfo getCurrentWeather(Location location) throws WeatherGatewayException;
+    WeatherInfo getCurrentWeather(String city, String country)
+            throws WeatherGatewayException;
 }

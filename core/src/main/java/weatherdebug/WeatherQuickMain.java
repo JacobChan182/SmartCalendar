@@ -6,12 +6,15 @@ import interface_adapter.presenters.GetCurrentWeatherPresenter;
 import interface_adapter.presenters.WeatherViewModel;
 import use_case.get_current_weather.GetCurrentWeatherInteractor;
 import use_case.get_current_weather.WeatherApiGateway;
+
 /**
  * Very simple temporary main for quickly testing the weather feature.
+ * Uses city + country instead of a single address string.
  */
 public class WeatherQuickMain {
 
     public static void main(String[] args) {
+        // 1. Wire up the CA stack
         WeatherViewModel viewModel = new WeatherViewModel();
         GetCurrentWeatherPresenter presenter = new GetCurrentWeatherPresenter(viewModel);
 
@@ -22,10 +25,14 @@ public class WeatherQuickMain {
         GetCurrentWeatherController controller =
                 new GetCurrentWeatherController(interactor);
 
-        String address = "Toronto";
+        // 2. Test input: city + country
+        String city = "Toronto";
+        String country = "Canada";
 
-        controller.onGetCurrentWeather(address);
+        // 3. Trigger the use case
+        controller.onGetCurrentWeather(city, country);
 
+        // 4. Print what the UI would show
         if (viewModel.getError() != null) {
             System.out.println("Error: " + viewModel.getError());
         } else {

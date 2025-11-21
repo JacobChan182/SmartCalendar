@@ -7,27 +7,59 @@ import javafx.scene.layout.*;
 import java.time.*;
 import java.util.List;
 
+// ===== 天气部分：UI 调用的 service 接口 =====
+import weather.CoreWeatherUiService;
+import weather.WeatherUiService;
+
 public class MainController {
+
+    // ================== 日历 UI 控件 ==================
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
     @FXML private Button btnPrev, btnNext;
     @FXML private ListView<String> dayEvents;
 
+    // 当前显示的月份 & 选中的日期
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
 
+    // ================== WEATHER: UI fields & service ==================
+
+    // 用户输入城市和国家（TextField 在 FXML 里要有 fx:id）
+    @FXML private TextField cityField;      // e.g. "Toronto"
+    @FXML private TextField countryField;   // e.g. "Canada" or "CA"
+
+    // 显示天气结果的标签（对应 FXML 里的 Label fx:id）
+    @FXML private Label weatherLocationLabel;    // "Toronto, Canada"
+    @FXML private Label weatherCurrentLabel;     // "Current: 3.4 °C"
+    @FXML private Label weatherRangeLabel;       // "Today: -1.0 °C ~ 6.2 °C"
+    @FXML private Label weatherConditionLabel;   // "Partly cloudy"
+    @FXML private Label weatherErrorLabel;       // 出错时显示错误信息
+
+    // UI 访问 core 的入口：内部会连 controller / interactor / gateway
+    private final WeatherUiService weatherService = new CoreWeatherUiService();
+
+    // ================== 初始化（由 JavaFX 自动调用） ==================
     @FXML
     private void initialize() {
+        // 上一月 & 下一月按钮
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
-//        System.out.println("[UI] MainController.initialize() called");
-//        if (lblYearMonth != null) {
-//            lblYearMonth.setText("UI OK  (loaded via FXML)");
-//        }
+
+        // ⭐ 天气：可选，给输入框一个默认值，方便测试
+        if (cityField != null && countryField != null) {
+            cityField.setText("Toronto");
+            countryField.setText("Canada");
+        }
+
+        // 渲染当月日历 + 右侧当天事件列表
         renderMonth();
         refreshDayDetails();
     }
 
+    // ================== 日历逻辑 ==================
+
+    /** 改变当前月份（delta 可以是 -1 / +1 等） */
     private void changeMonth(int delta) {
         current = current.plusMonths(delta);
         selected = current.atDay(Math.min(
@@ -35,11 +67,12 @@ public class MainController {
         renderMonth();
     }
 
+    /** 根据 current 渲染整个月的格子 */
     private void renderMonth() {
-        lblYearMonth.setText(current.toString()); // e.g. 2025-11
+        lblYearMonth.setText(current.toString()); // e.g. "2025-11"
         monthGrid.getChildren().clear();
 
-        // title of the table（Mon..Sun）, monday is at the start, can
+        // title of the table（Mon..Sun）, monday is at the start
         var headers = List.of("Mon","Tue","Wed","Thu","Fri","Sat","Sun");
         for (int c = 0; c < 7; c++) {
             var hdr = new Label(headers.get(c));
@@ -61,28 +94,29 @@ public class MainController {
         }
     }
 
+    /** 创建单个日期的小方块 cell */
     private Node makeDayCell(LocalDate date) {
         VBox box = new VBox(4);
         box.getStyleClass().add("day-cell");
         box.setFillWidth(true);
-        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // CH：关键：允许拉伸 EN: Key feature: allows stretching
+        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // 允许拉伸
         GridPane.setHgrow(box, Priority.ALWAYS);
         GridPane.setVgrow(box, Priority.ALWAYS);
 
         Label title = new Label(Integer.toString(date.getDayOfMonth()));
         title.getStyleClass().add("day-num");
 
-        VBox eventBox = new VBox(4);             // CN: 事件容器 EN: Event container
+        VBox eventBox = new VBox(4);             // 事件容器
         eventBox.getStyleClass().add("event-box");
 
         box.getChildren().addAll(title, eventBox);
 
-        // CN: 初次渲染就填充事件 EN: load and render the events at the beginning
+        // 初次渲染就填充事件
         fillEventPills(eventBox, date);
 
         box.setOnMouseClicked(e -> {
             selectDay(date);
-            // CN: 右侧列表刷新 EN: right side list refresh
+            // 右侧列表刷新
             refreshDayDetails();
         });
 
@@ -90,26 +124,33 @@ public class MainController {
         return box;
     }
 
+    /** 选择某一天 */
     private void selectDay(LocalDate date) {
         selected = date;
-        refreshDayDetails();        // CN: 点击时也刷新 EN: refresh when clicking
+        refreshDayDetails();        // 点击时也刷新
         renderMonth();
     }
+
+    /** 更新右侧当天事件列表 */
     private void refreshDayDetails() {
         List<String> display = getEventsFor(selected).stream()
                 .map(e -> e.title)
                 .toList();
         dayEvents.getItems().setAll(display);
     }
-    //TODO CN: 轻量事件模型（你接 core 后可替换为真实 Event） EN: Event interface, replace it when core is done
+
+    // ========= demo 用的轻量事件模型（之后可替换成真正 Event 实体） =========
     static class EventItem {
-        final String title;      // CN: 展示文本（含时间或科目）EN: title for showing
-        final String category;   // CN:用于着色（如 "course", "exam", "life"...） EN: Category for giving colors
+        final String title;      // 展示文本（含时间或科目）
+        final String category;   // 用于着色（如 "course", "exam", "life"...）
+
         EventItem(String title, String category) {
-            this.title = title; this.category = category;
+            this.title = title;
+            this.category = category;
         }
     }
-    //TODO CN: 取当天事件（先用假数据；接 core 后替换）EN: Get events for the specific day, replace when Event class is ready
+
+    /** 取某一天的 demo 事件（假数据） */
     private List<EventItem> getEventsFor(LocalDate date) {
         // demo：some test data
         if (date.getDayOfMonth() % 7 == 0)
@@ -123,20 +164,22 @@ public class MainController {
                     new EventItem("Gym 19:00", "life"));
         return List.of();
     }
-    // CN: 创建一个“事件 pill”标签 EN: make a "eventpill" for those blocks
+
+    /** 创建一个“事件 pill”标签 */
     private Label makePill(EventItem e) {
         Label pill = new Label(e.title);
-        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // CN：颜色按类别 EN：colors-category
+        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // 颜色按类别
         pill.setMaxWidth(Double.MAX_VALUE);
-        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // CN: 超长省略号 EN: Extra-long ellipsis
+        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // 超长省略号
         return pill;
     }
-    // CN: 给一个日期的事件容器填充 2–3 条 pill，并附加 +n EN: each day block will have 2-3 pills, rest shows as +n
+
+    /** 给一个日期的事件容器填充 2–3 条 pill，并附加 +n */
     private void fillEventPills(VBox eventBox, LocalDate date) {
         eventBox.getChildren().clear();
 
         List<EventItem> list = getEventsFor(date);
-        int limit = 3;                      // CN: 每格最多展示数量 EN: Maximum number of pills in each block
+        int limit = 3;                      // 每格最多展示数量
         int shown = Math.min(limit, list.size());
 
         for (int i = 0; i < shown; i++) {
@@ -148,9 +191,54 @@ public class MainController {
             moreLbl.getStyleClass().add("event-more");
             eventBox.getChildren().add(moreLbl);
 
-            // CN：鼠标悬停 tooltip 展示全部 EN：mouse hover to show all info
-            String all = list.stream().map(it -> "• " + it.title).reduce((a,b)->a+"\n"+b).orElse("");
+            // 鼠标悬停 tooltip 展示全部
+            String all = list.stream()
+                    .map(it -> "• " + it.title)
+                    .reduce((a,b)->a+"\n"+b)
+                    .orElse("");
             Tooltip.install(eventBox, new Tooltip(all));
+        }
+    }
+
+    // ================== WEATHER: 按钮回调 ==================
+
+    /**
+     * FXML 按钮 onAction="#onWeatherSearchClicked" 会调用这个方法。
+     *
+     * 流程：
+     *   1. 从 TextField 读取 city / country
+     *   2. 调用 weatherService.fetchWeather(city, country)
+     *   3. 从 weatherService 取出展示文本，更新几个 Label
+     */
+    @FXML
+    private void onWeatherSearchClicked() {
+        if (cityField == null || countryField == null) {
+            // FXML 没连好，为了防止 NPE，直接返回
+            return;
+        }
+
+        String city = cityField.getText();
+        String country = countryField.getText();
+
+        // 1) 调用 core 层用例（通过 UI service）
+        weatherService.fetchWeather(city, country);
+
+        // 2) 从 UI service / ViewModel 读取结果
+        String error = weatherService.getError();
+        if (error != null && !error.isBlank()) {
+            // 有错误：显示错误信息，清空其它 label
+            weatherErrorLabel.setText(error);
+            weatherLocationLabel.setText("");
+            weatherCurrentLabel.setText("");
+            weatherRangeLabel.setText("");
+            weatherConditionLabel.setText("");
+        } else {
+            // 成功：清空错误，显示天气信息
+            weatherErrorLabel.setText("");
+            weatherLocationLabel.setText(weatherService.getLocationDisplay());
+            weatherCurrentLabel.setText(weatherService.getCurrentTempText());
+            weatherRangeLabel.setText(weatherService.getTodayRangeText());
+            weatherConditionLabel.setText(weatherService.getDescriptionText());
         }
     }
 }

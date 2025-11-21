@@ -1,44 +1,43 @@
 package use_case.get_current_weather;
 
-import entity.Location;
 import entity.WeatherInfo;
 
 /**
- * Interactor for the Get Current Weather use case.
- * This is the application/business logic that orchestrates the flow.
+ * Interactor for the "Get Current Weather" use case.
+ *
+ * Flow:
+ *   controller -> interactor (this class) -> WeatherApiGateway & presenter
  */
 public class GetCurrentWeatherInteractor implements GetCurrentWeatherInputBoundary {
 
-    private final WeatherApiGateway weatherApiGateway;
+    private final WeatherApiGateway gateway;
     private final GetCurrentWeatherOutputBoundary presenter;
 
-    public GetCurrentWeatherInteractor(WeatherApiGateway weatherApiGateway,
+    public GetCurrentWeatherInteractor(WeatherApiGateway gateway,
                                        GetCurrentWeatherOutputBoundary presenter) {
-        this.weatherApiGateway = weatherApiGateway;
+        this.gateway = gateway;
         this.presenter = presenter;
     }
 
     @Override
     public void execute(GetCurrentWeatherRequestModel requestModel) {
-        String address = requestModel.getAddress();
-
-        if (address == null || address.isBlank()) {
-            presenter.presentError("Address must not be empty.");
-            return;
-        }
-
         try {
-            // 1. Address -> Location (via geocoding)
-            Location location = weatherApiGateway.resolveLocation(address);
+            // 1. 调用网关，根据 city + country 获取天气数据
+            WeatherInfo info = gateway.getCurrentWeather(
+                    requestModel.getCity(),
+                    requestModel.getCountry()
+            );
 
-            // 2. Location -> WeatherInfo (current + today's min/max)
-            WeatherInfo weatherInfo = weatherApiGateway.getCurrentWeather(location);
+            // 2. 包装成 response model
+            GetCurrentWeatherResponseModel response =
+                    new GetCurrentWeatherResponseModel(info);
 
-            presenter.present(new GetCurrentWeatherResponseModel(weatherInfo));
+            // 3. 交给 presenter 更新 ViewModel
+            presenter.present(response);
 
         } catch (WeatherGatewayException e) {
+            // 4. 出错时，把错误信息交给 presenter
             presenter.presentError("Failed to fetch weather: " + e.getMessage());
         }
     }
 }
-

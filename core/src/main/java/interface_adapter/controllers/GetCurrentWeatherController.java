@@ -15,11 +15,11 @@ public class GetCurrentWeatherController {
     }
 
     /**
-     * Called by the UI when the user submits a city/address string.
+     * Called by the UI when the user submits a city and country.
      */
-    public void onGetCurrentWeather(String address) {
+    public void onGetCurrentWeather(String city, String country) {
         GetCurrentWeatherRequestModel request =
-                new GetCurrentWeatherRequestModel(address);
+                new GetCurrentWeatherRequestModel(city, country);
         interactor.execute(request);
     }
 }
