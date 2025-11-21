@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartcalendar.fx.MainController"
+            stylesheets="@style.css">
+
+    <top>
+        <HBox spacing="8" styleClass="toolbar" alignment="CENTER"
+              BorderPane.alignment="CENTER">
+            <Button fx:id="btnPrev" text="‹"/>
+            <Label fx:id="lblYearMonth" styleClass="title"/>
+            <Button fx:id="btnNext" text="›"/>
+        </HBox>
+    </top>
+
+    <center>
+        <GridPane fx:id="monthGrid" hgap="6" vgap="6" styleClass="month-grid">
+            <columnConstraints>
+                <!-- 7 列，每列 ≈ 100/7% | 7 column, each 100/7 %-->
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+            </columnConstraints>
+            <rowConstraints>
+                <!-- 第 0 行是表头，固定一点高度 | row 0 is at the top, fixed height -->
+                <RowConstraints prefHeight="36"/>
+                <!-- 下面最多 6 行日期，全部可拉伸 | maximum of 6 row of date, stretchable -->
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+            </rowConstraints>
+        </GridPane>
+    </center>
+
+    <right>
+        <VBox spacing="8" styleClass="sidebar">
+            <Label text="Day details"/>
+            <ListView fx:id="dayEvents"/>
+        </VBox>
+    </right>
+
+</BorderPane>
