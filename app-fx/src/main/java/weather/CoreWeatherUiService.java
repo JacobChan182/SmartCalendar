@@ -8,8 +8,12 @@ import use_case.get_current_weather.GetCurrentWeatherInteractor;
 import use_case.get_current_weather.WeatherApiGateway;
 
 /**
- * Concrete implementation of WeatherUiService that delegates
- * to the core Clean Architecture weather stack.
+ * CoreWeatherUiService is the bridge between the JavaFX UI
+ * and the clean-architecture weather use case.
+ *
+ * The UI talks only to this class via the WeatherUiService interface.
+ * This class wires:
+ *   UI -> Controller -> Interactor -> Gateway -> Presenter -> ViewModel
  */
 public class CoreWeatherUiService implements WeatherUiService {
 
@@ -17,58 +21,38 @@ public class CoreWeatherUiService implements WeatherUiService {
     private final GetCurrentWeatherController controller;
 
     /**
-     * Default constructor that wires up the whole weather use case
-     * using the production Open-Meteo API gateway.
-     *
-     * In tests you could create another constructor and inject fakes.
+     * Default constructor used by the JavaFX layer.
+     * It creates and wires all the dependencies needed for the use case.
      */
     public CoreWeatherUiService() {
-        this(buildDefaultControllerAndViewModel());
-    }
+        // 1. Create the view model that will hold display strings.
+        this.viewModel = new WeatherViewModel();
 
-    private CoreWeatherUiService(ControllerAndViewModel bundle) {
-        this.controller = bundle.controller;
-        this.viewModel = bundle.viewModel;
-    }
-
-    /**
-     * Small bundle type to return both controller and view model together.
-     */
-    private static class ControllerAndViewModel {
-        final GetCurrentWeatherController controller;
-        final WeatherViewModel viewModel;
-
-        ControllerAndViewModel(GetCurrentWeatherController controller,
-                               WeatherViewModel viewModel) {
-            this.controller = controller;
-            this.viewModel = viewModel;
-        }
-    }
-
-    /**
-     * Wire the full Clean Architecture chain:
-     * UI -> Controller -> Interactor -> WeatherApiGateway & Presenter -> ViewModel
-     */
-    private static ControllerAndViewModel buildDefaultControllerAndViewModel() {
-        WeatherViewModel viewModel = new WeatherViewModel();
+        // 2. Presenter writes into the view model.
         GetCurrentWeatherPresenter presenter = new GetCurrentWeatherPresenter(viewModel);
 
+        // 3. Gateway calls the Open-Meteo API.
         WeatherApiGateway gateway = new OpenMeteoWeatherApiGateway();
+
+        // 4. Interactor is the use-case logic.
         GetCurrentWeatherInteractor interactor =
                 new GetCurrentWeatherInteractor(gateway, presenter);
 
-        GetCurrentWeatherController controller =
-                new GetCurrentWeatherController(interactor);
-
-        return new ControllerAndViewModel(controller, viewModel);
+        // 5. Controller is called by this UI service.
+        this.controller = new GetCurrentWeatherController(interactor);
     }
 
-    // -------- WeatherUiService implementation --------
-
+    /**
+     * Trigger the use case with the given city and country.
+     * This is the only method the UI needs to call to fetch weather.
+     */
     @Override
     public void fetchWeather(String city, String country) {
+        // ✅ IMPORTANT: use the two-argument version of the controller method
         controller.onGetCurrentWeather(city, country);
     }
+
+    // --- Getter methods: the UI reads from the view model through this service ---
 
     @Override
     public String getLocationDisplay() {

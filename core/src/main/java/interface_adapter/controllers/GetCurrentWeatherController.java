@@ -4,7 +4,7 @@ import use_case.get_current_weather.GetCurrentWeatherInputBoundary;
 import use_case.get_current_weather.GetCurrentWeatherRequestModel;
 
 /**
- * Controller called by the UI to trigger the Get Current Weather use case.
+ * Controller called by the UI / UI services to trigger the use case.
  */
 public class GetCurrentWeatherController {
 
@@ -15,7 +15,7 @@ public class GetCurrentWeatherController {
     }
 
     /**
-     * Called by the UI when the user submits a city and country.
+     * Called when the user requests weather for a given city and country.
      */
     public void onGetCurrentWeather(String city, String country) {
         GetCurrentWeatherRequestModel request =
