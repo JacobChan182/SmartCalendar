@@ -23,6 +23,18 @@ for jar in ~/.m2/repository/com/squareup/okhttp3/okhttp/4.12.0/*.jar; do
     CLASSPATH="${CLASSPATH}:${jar}"
 done
 
+for jar in ~/.m2/repository/org/jetbrains/kotlin/kotlin-stdlib/1.9.24/*.jar; do
+    CLASSPATH="${CLASSPATH}:${jar}"
+done
+
+for jar in ~/.m2/repository/com/squareup/okio/okio/3.9.1/*.jar; do
+    CLASSPATH="${CLASSPATH}:${jar}"
+done
+
+for jar in ~/.m2/repository/com/squareup/okio/okio-jvm/3.9.1/*.jar; do
+    CLASSPATH="${CLASSPATH}:${jar}"
+done
+
 for jar in ~/.m2/repository/org/xerial/sqlite-jdbc/3.44.1.0/*.jar; do
     CLASSPATH="${CLASSPATH}:${jar}"
 done

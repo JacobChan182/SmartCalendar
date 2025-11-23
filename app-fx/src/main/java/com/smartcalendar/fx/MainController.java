@@ -1,31 +1,143 @@
 package com.smartcalendar.fx;
 
+import data_access.ColorApiDataAccessObject;
+import interface_adapter.color_scheme.ColorSchemeController;
+import interface_adapter.color_scheme.ColorSchemePresenter;
+import interface_adapter.color_scheme.ColorSchemeState;
+import interface_adapter.color_scheme.ColorSchemeViewModel;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import use_case.get_color_scheme.GetColorSchemeInteractor;
+import use_case.get_color_scheme.GetColorSchemeUserDataAccessInterface;
+
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.time.*;
 import java.util.List;
 
-public class MainController {
+public class MainController implements PropertyChangeListener {
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
     @FXML private Button btnPrev, btnNext;
     @FXML private ListView<String> dayEvents;
+    
+    // Color scheme UI components
+    @FXML private TextField hexColorInput;
+    @FXML private Button goButton;
+    @FXML private Label colorErrorLabel;
+    @FXML private VBox colorSchemesContainer;
+    @FXML private HBox monochromaticColors;
+    @FXML private HBox analogousColors;
+    @FXML private HBox complementaryColors;
+    @FXML private HBox neutralColors;
 
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
+    
+    // Color scheme components
+    private ColorSchemeViewModel colorSchemeViewModel;
+    private ColorSchemeController colorSchemeController;
 
     @FXML
     private void initialize() {
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
-//        System.out.println("[UI] MainController.initialize() called");
-//        if (lblYearMonth != null) {
-//            lblYearMonth.setText("UI OK  (loaded via FXML)");
-//        }
         renderMonth();
         refreshDayDetails();
+        
+        // Initialize color scheme feature
+        initializeColorScheme();
+    }
+    
+    private void initializeColorScheme() {
+        // Create ViewModel
+        colorSchemeViewModel = new ColorSchemeViewModel();
+        colorSchemeViewModel.addPropertyChangeListener(this);
+        
+        // Create Data Access Object
+        GetColorSchemeUserDataAccessInterface colorApiDataAccessObject = new ColorApiDataAccessObject();
+        
+        // Create Presenter
+        ColorSchemePresenter colorSchemePresenter = new ColorSchemePresenter(colorSchemeViewModel);
+        
+        // Create Interactor
+        GetColorSchemeInteractor getColorSchemeInteractor = new GetColorSchemeInteractor(
+                colorApiDataAccessObject,
+                colorSchemePresenter
+        );
+        
+        // Create Controller
+        colorSchemeController = new ColorSchemeController(getColorSchemeInteractor);
+        
+        // Initially hide error label
+        colorErrorLabel.setVisible(false);
+    }
+    
+    @FXML
+    private void onGoButtonClicked() {
+        String hexColor = hexColorInput.getText().trim();
+        if (hexColor.isEmpty()) {
+            showError("Please enter a hex color code");
+            return;
+        }
+        
+        colorErrorLabel.setVisible(false);
+        colorSchemeController.execute(hexColor);
+    }
+    
+    private void showError(String message) {
+        colorErrorLabel.setText(message);
+        colorErrorLabel.setVisible(true);
+    }
+    
+    private void displayColors(List<String> colors, HBox container) {
+        container.getChildren().clear();
+        for (String hex : colors) {
+            Region colorBox = createColorBox(hex);
+            container.getChildren().add(colorBox);
+        }
+    }
+    
+    private Region createColorBox(String hex) {
+        Region colorBox = new Region();
+        colorBox.setPrefSize(40, 40);
+        colorBox.setMinSize(40, 40);
+        colorBox.setMaxSize(40, 40);
+        colorBox.setStyle(String.format(
+                "-fx-background-color: #%s; -fx-background-radius: 4; -fx-border-color: #cccccc; -fx-border-radius: 4;",
+                hex
+        ));
+        
+        // Add tooltip with hex code
+        Tooltip tooltip = new Tooltip("#" + hex);
+        Tooltip.install(colorBox, tooltip);
+        
+        return colorBox;
+    }
+    
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if (evt.getSource() == colorSchemeViewModel) {
+            ColorSchemeState state = colorSchemeViewModel.getState();
+            
+            if (state.getErrorMessage() != null) {
+                showError(state.getErrorMessage());
+                // Clear all color displays
+                monochromaticColors.getChildren().clear();
+                analogousColors.getChildren().clear();
+                complementaryColors.getChildren().clear();
+                neutralColors.getChildren().clear();
+            } else {
+                // Display all color schemes
+                displayColors(state.getMonochromaticColors(), monochromaticColors);
+                displayColors(state.getAnalogousColors(), analogousColors);
+                displayColors(state.getComplementaryColors(), complementaryColors);
+                displayColors(state.getNeutralColors(), neutralColors);
+                colorErrorLabel.setVisible(false);
+            }
+        }
     }
 
     private void changeMonth(int delta) {
