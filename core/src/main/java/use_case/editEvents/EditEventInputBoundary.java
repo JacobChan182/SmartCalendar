@@ -5,5 +5,5 @@ public interface EditEventInputBoundary {
      * Executes the login use case.
      * @param editEventInputData the input data
      */
-    void execute(EditEventInputData, editEventInputData);
+    void execute(EditEventInputData editEventInputData);
 }

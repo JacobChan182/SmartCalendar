@@ -1,27 +1,59 @@
 package com.smartcalendar.fx;
 
+import entities.Event;
+
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import use_case.event_changes.EventEdit;
+
 import java.time.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class MainController {
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
-    @FXML private Button btnPrev, btnNext;
-    @FXML private ListView<String> dayEvents;
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private ListView<Event> dayEvents;
+    @FXML private ComboBox<Event.CategoryType> categoryCombo;
+    @FXML private TextField titleField;
+    @FXML private TextField locationField;
+    @FXML private TextField startField;
+    @FXML private TextField endField;
+    @FXML private DatePicker datePicker;
+
+
 
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
 
+    private final EventEdit eventEdit = new EventEdit();
     @FXML
     private void initialize() {
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
-//        System.out.println("[UI] MainController.initialize() called");
-//        if (lblYearMonth != null) {
+        for (Event.CategoryType type : Event.CategoryType.values()) {
+            categoryCombo.getItems().add(type);
+        }
+
+        dayEvents.getSelectionModel().selectedItemProperty()
+                .addListener((observant, old, eventselect) -> {
+                    if (eventselect != null) {
+                        titleField.setText(eventselect.getTitle());
+                        locationField.setText(eventselect.getLocation());
+                        datePicker.setValue(eventselect.getStart().toLocalDate());
+                        startField.setText(eventselect.getStart().toLocalTime().toString());
+                        endField.setText(eventselect.getEnd().toLocalTime().toString());
+                        categoryCombo.setValue(eventselect.getCategory());
+                    }
+                } );
+
+        ;//        if (lblYearMonth != null) {
 //            lblYearMonth.setText("UI OK  (loaded via FXML)");
 //        }
         renderMonth();
@@ -61,6 +93,82 @@ public class MainController {
         }
     }
 
+
+    public void addEvent() {
+        try {
+            String title = titleField.getText();
+            String location = locationField.getText();
+            LocalDate date = datePicker.getValue();
+            LocalTime start = LocalTime.parse(startField.getText());
+            LocalTime end = LocalTime.parse(endField.getText());
+            Event.CategoryType category = categoryCombo.getValue();
+
+            Event event = new Event(
+                    UUID.randomUUID(),
+                    title,
+                    LocalDateTime.of(date, start),
+                    LocalDateTime.of(date, end),
+                    location,
+                    category,
+                    null
+            );
+
+            eventEdit.addEvent(event);
+            refreshDayDetails();
+            renderMonth();
+        } catch (Exception ex) {System.err.println("Failed to add event" + ex.getMessage());}
+    }
+
+    public void editEvent() {
+        Event event = dayEvents.getSelectionModel().getSelectedItem();
+        if (event != null) {
+            TextInputDialog dialog = new TextInputDialog(event.getTitle());
+            dialog.setHeaderText("Edit");
+            dialog.setContentText("Title");
+            dialog.showAndWait().ifPresent(newTitle -> {
+                Event updated = new Event(
+                        event.getId(),
+                        newTitle,
+                        event.getStart(),
+                        event.getEnd(),
+                        event.getLocation(),
+                        event.getCategory(),
+                        event.getReminder()
+                );
+                eventEdit.editEvent(event.getId(), updated);
+                refreshDayDetails();
+                renderMonth();
+            });
+        }
+    }
+
+    public void deleteEvent() {
+        Event event = dayEvents.getSelectionModel().getSelectedItem();
+        if (event != null) {
+            eventEdit.deleteEvent(event.getId());
+            refreshDayDetails();;
+            renderMonth();
+        }
+    }
+
+    public void updateEvent() {
+        Event eventSelect = dayEvents.getSelectionModel().getSelectedItem();
+        if (eventSelect != null) {
+            Event updated = new Event(
+                    eventSelect.getId(),
+                    titleField.getText(),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(startField.getText())),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
+                    locationField.getText(),
+                    categoryCombo.getValue(),
+                    eventSelect.getReminder()
+            );
+            eventEdit.editEvent(eventSelect.getId(), updated);
+            refreshDayDetails();
+            renderMonth();
+        }
+    }
+
     private Node makeDayCell(LocalDate date) {
         VBox box = new VBox(4);
         box.getStyleClass().add("day-cell");
@@ -96,37 +204,22 @@ public class MainController {
         renderMonth();
     }
     private void refreshDayDetails() {
-        List<String> display = getEventsFor(selected).stream()
-                .map(e -> e.title)
-                .toList();
-        dayEvents.getItems().setAll(display);
-    }
-    //TODO CN: 轻量事件模型（你接 core 后可替换为真实 Event） EN: Event interface, replace it when core is done
-    static class EventItem {
-        final String title;      // CN: 展示文本（含时间或科目）EN: title for showing
-        final String category;   // CN:用于着色（如 "course", "exam", "life"...） EN: Category for giving colors
-        EventItem(String title, String category) {
-            this.title = title; this.category = category;
+        List<String> display = new ArrayList<>();
+        for (Event e : getEventsFor(selected)) {
+            display.add(e.getTitle());
         }
+        dayEvents.getItems().setAll(getEventsFor(selected));
+    //TODO CN: 轻量事件模型（你接 core 后可替换为真实 Event） EN: Event interface, replace it when core is done
+
     }
     //TODO CN: 取当天事件（先用假数据；接 core 后替换）EN: Get events for the specific day, replace when Event class is ready
-    private List<EventItem> getEventsFor(LocalDate date) {
-        // demo：some test data
-        if (date.getDayOfMonth() % 7 == 0)
-            return List.of(new EventItem("CSC207H • 14:00", "course"),
-                    new EventItem("MUS207H • 16:00", "course"),
-                    new EventItem("Gym • 19:00", "life"),
-                    new EventItem("…", "life"));
-        if (date.equals(LocalDate.now()))
-            return List.of(new EventItem("Standup 09:00", "work"),
-                    new EventItem("Lunch 13:30", "life"),
-                    new EventItem("Gym 19:00", "life"));
-        return List.of();
+    private List<Event> getEventsFor(LocalDate date) {
+        return eventEdit.getEventsForDay(date);
     }
     // CN: 创建一个“事件 pill”标签 EN: make a "eventpill" for those blocks
-    private Label makePill(EventItem e) {
-        Label pill = new Label(e.title);
-        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // CN：颜色按类别 EN：colors-category
+    private Label makePill(Event e) {
+        Label pill = new Label(e.getTitle());
+        pill.getStyleClass().addAll("event-pill", "pill-" + e.getCategory().name().toLowerCase()); // CN：颜色按类别 EN：colors-category
         pill.setMaxWidth(Double.MAX_VALUE);
         pill.setTextOverrun(OverrunStyle.ELLIPSIS); // CN: 超长省略号 EN: Extra-long ellipsis
         return pill;
@@ -135,7 +228,7 @@ public class MainController {
     private void fillEventPills(VBox eventBox, LocalDate date) {
         eventBox.getChildren().clear();
 
-        List<EventItem> list = getEventsFor(date);
+        List<Event> list = getEventsFor(date);
         int limit = 3;                      // CN: 每格最多展示数量 EN: Maximum number of pills in each block
         int shown = Math.min(limit, list.size());
 
@@ -149,7 +242,7 @@ public class MainController {
             eventBox.getChildren().add(moreLbl);
 
             // CN：鼠标悬停 tooltip 展示全部 EN：mouse hover to show all info
-            String all = list.stream().map(it -> "• " + it.title).reduce((a,b)->a+"\n"+b).orElse("");
+            String all = list.stream().map(it -> "• " + it.getTitle()).reduce((a,b)->a+"\n"+b).orElse("");
             Tooltip.install(eventBox, new Tooltip(all));
         }
     }
