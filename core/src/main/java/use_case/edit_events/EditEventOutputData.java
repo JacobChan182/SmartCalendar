@@ -21,6 +21,7 @@ public class EditEventOutputData {
         this.end = end;
         this.location = location;
         this.category = category;
+        this.reminder = reminder;
     }
 
 }
