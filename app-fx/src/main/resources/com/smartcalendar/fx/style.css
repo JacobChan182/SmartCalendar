@@ -137,3 +137,37 @@
 }
 .button { -fx-background-color: #2a2a2a; -fx-text-fill: #eee; }
 .scroll-bar:vertical, .scroll-bar:horizontal { -fx-background-color: #121212; }
+
+/* Color Scheme UI */
+.scheme-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #c9c9c9;
+    -fx-padding: 4 0 2 0;
+}
+
+.error-label {
+    -fx-text-fill: #ff6b6b;
+    -fx-font-size: 11px;
+    -fx-wrap-text: true;
+}
+
+#hexColorInput {
+    -fx-background-color: #1a1a1a;
+    -fx-text-fill: #e6e6e6;
+    -fx-border-color: #3a3a3a;
+    -fx-border-radius: 4;
+    -fx-padding: 6;
+}
+
+#goButton {
+    -fx-background-color: #0ea5e9;
+    -fx-text-fill: white;
+    -fx-font-weight: 600;
+    -fx-padding: 6 16;
+    -fx-background-radius: 4;
+}
+
+#goButton:hover {
+    -fx-background-color: #0284c7;
+}
