@@ -1,5 +1,3 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
 
@@ -45,6 +43,7 @@
 
     <right>
         <VBox spacing="8" styleClass="sidebar">
+            <!-- ========= 原来的 Day details 区域 ========= -->
             <Label text="Day details"/>
             <ListView fx:id="dayEvents"/>
             
@@ -75,6 +74,39 @@
                     <HBox spacing="4" fx:id="neutralColors" alignment="CENTER_LEFT"/>
                 </VBox>
             </VBox>
+
+            <!-- 分割线：下面是天气区域 -->
+            <Separator/>
+
+            <!-- ========= Weather 区域（和 MainController 字段一一对应） ========= -->
+            <Label text="Weather"/>
+
+            <!-- 城市 + 国家 输入行 -->
+            <HBox spacing="4">
+                <!-- 对应 @FXML private TextField cityField; -->
+                <TextField fx:id="cityField"
+                           promptText="City (e.g. Toronto)"
+                           HBox.hgrow="ALWAYS"/>
+
+                <!-- 对应 @FXML private TextField countryField; -->
+                <TextField fx:id="countryField"
+                           promptText="Country / Code (e.g. Canada or CA)"
+                           prefWidth="80"/>
+            </HBox>
+
+            <!-- 点击触发 onWeatherSearchClicked() -->
+            <Button text="Get weather"
+                    onAction="#onWeatherSearchClicked"/>
+
+            <!-- 错误信息标签，对应 weatherErrorLabel -->
+            <Label fx:id="weatherErrorLabel"
+                   styleClass="weather-error"/>
+
+            <!-- 天气结果标签，对应 MainController 里的 4 个 Label -->
+            <Label fx:id="weatherLocationLabel"/>
+            <Label fx:id="weatherCurrentLabel"/>
+            <Label fx:id="weatherRangeLabel"/>
+            <Label fx:id="weatherConditionLabel"/>
         </VBox>
     </right>
 
