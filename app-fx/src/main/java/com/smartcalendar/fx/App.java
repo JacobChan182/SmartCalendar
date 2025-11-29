@@ -9,14 +9,16 @@ import javafx.stage.Stage;
 public class App extends Application {
     @Override
     public void start(Stage stage) throws Exception {
-        // 1) load FXML
-        //    FXML physical path should be：app-fx/src/main/resources/com/smartcalendar/fx/MainView.fxml
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("MainView.fxml"));
+        // 先加载登录界面 Load Login window first
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("LoginView.fxml"));
         Parent root = loader.load();
 
-        // 2) set Scene/Stage
-        Scene scene = new Scene(root, 1280, 900);
-        stage.setTitle("SmartCalendar");
+        // inject stage into LoginFxController，for changing the window after login
+        LoginFxController controller = loader.getController();
+        controller.setPrimaryStage(stage);
+
+        Scene scene = new Scene(root, 400, 300);
+        stage.setTitle("SmartCalendar - Login");
         stage.setScene(scene);
         stage.show();
     }
