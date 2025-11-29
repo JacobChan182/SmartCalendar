@@ -1,20 +1,28 @@
 package com.smartcalendar.fx;
 
-import entities.Event;
+import data_access.InMemoryEventDataAccessObject;
+import entity.Event;
 
+import interface_adapter.addEvent.AddEventPresenter;
+import interface_adapter.addEvent.AddEventUserAccess;
+import interface_adapter.addEvent.AddEventView;
+import interface_adapter.editEvent.EditEventView;
+import use_case.addEvent.AddEventInteractor;
+import use_case.addEvent.EventMethodsDataAccessInterface;
+import interface_adapter.editEvent.EditEventPresenter;
+import interface_adapter.editEvent.EditEventUserAccess;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import use_case.event_changes.EventEdit;
+import use_case.editEvents.EditEventInteractor;
 
 import java.time.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
-public class MainController {
+public class MainController implements AddEventView, EditEventView {
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
     @FXML private Button btnPrev;
@@ -26,13 +34,31 @@ public class MainController {
     @FXML private TextField startField;
     @FXML private TextField endField;
     @FXML private DatePicker datePicker;
+    @FXML private TextField reminderField;
 
 
 
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
 
-    private final EventEdit eventEdit = new EventEdit();
+    private final AddEventUserAccess addEventUserAccess;
+    private final EditEventUserAccess editEventUserAccess;
+
+    private final EventMethodsDataAccessInterface repository;
+
+    public MainController() {
+        this.repository = new InMemoryEventDataAccessObject();
+
+        //Add events setup
+        AddEventPresenter addEventPresenter = new AddEventPresenter(this);
+        AddEventInteractor addEventInteractor = new AddEventInteractor(repository, addEventPresenter);
+        this.addEventUserAccess = new AddEventUserAccess(addEventInteractor);
+
+        //Edit events setup
+        EditEventPresenter editEventPresenter = new EditEventPresenter(this);
+        EditEventInteractor editEventInteractor = new EditEventInteractor(repository, editEventPresenter);
+        this.editEventUserAccess = new EditEventUserAccess(editEventInteractor);
+    }
     @FXML
     private void initialize() {
         btnPrev.setOnAction(e -> changeMonth(-1));
@@ -93,31 +119,41 @@ public class MainController {
         }
     }
 
+    //Add Events methods
+    @Override
+    public void showAddedEvent(Event event) {
+        refreshDayDetails();
+        renderMonth();
+    }
 
     public void addEvent() {
         try {
-            String title = titleField.getText();
-            String location = locationField.getText();
-            LocalDate date = datePicker.getValue();
-            LocalTime start = LocalTime.parse(startField.getText());
-            LocalTime end = LocalTime.parse(endField.getText());
-            Event.CategoryType category = categoryCombo.getValue();
-
-            Event event = new Event(
+            Event event = new Event (
                     UUID.randomUUID(),
-                    title,
-                    LocalDateTime.of(date, start),
-                    LocalDateTime.of(date, end),
-                    location,
-                    category,
-                    null
+                    titleField.getText(),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(startField.getText())),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
+                    locationField.getText(),
+                    categoryCombo.getValue(),
+                    reminderField.getText()
             );
-
-            eventEdit.addEvent(event);
-            refreshDayDetails();
-            renderMonth();
-        } catch (Exception ex) {System.err.println("Failed to add event" + ex.getMessage());}
+            addEventUserAccess.addEvent(event);
+        } catch (Exception exception) {
+            showError("Failed to add event: " + exception.getMessage());
+        }
     }
+
+    @Override
+    public void showError(String message) {
+        System.err.println(message);
+    }
+
+    @Override
+    public void showEditedEvent(Event event) {
+        refreshDayDetails();
+        renderMonth();
+    }
+
 
     public void editEvent() {
         Event event = dayEvents.getSelectionModel().getSelectedItem();
@@ -133,41 +169,23 @@ public class MainController {
                         event.getEnd(),
                         event.getLocation(),
                         event.getCategory(),
-                        event.getReminder()
+                        event.getReminderMessage()
                 );
-                eventEdit.editEvent(event.getId(), updated);
-                refreshDayDetails();
-                renderMonth();
+                editEventUserAccess.editEvent(
+                        updated.getId(),
+                        updated.getTitle(),
+                        updated.getStart(),
+                        updated.getEnd(),
+                        updated.getLocation(),
+                        updated.getCategory(),
+                        updated.getReminderMessage()
+                );
             });
         }
     }
 
-    public void deleteEvent() {
-        Event event = dayEvents.getSelectionModel().getSelectedItem();
-        if (event != null) {
-            eventEdit.deleteEvent(event.getId());
-            refreshDayDetails();;
-            renderMonth();
-        }
-    }
 
-    public void updateEvent() {
-        Event eventSelect = dayEvents.getSelectionModel().getSelectedItem();
-        if (eventSelect != null) {
-            Event updated = new Event(
-                    eventSelect.getId(),
-                    titleField.getText(),
-                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(startField.getText())),
-                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
-                    locationField.getText(),
-                    categoryCombo.getValue(),
-                    eventSelect.getReminder()
-            );
-            eventEdit.editEvent(eventSelect.getId(), updated);
-            refreshDayDetails();
-            renderMonth();
-        }
-    }
+
 
     private Node makeDayCell(LocalDate date) {
         VBox box = new VBox(4);
@@ -214,7 +232,7 @@ public class MainController {
     }
     //TODO CN: 取当天事件（先用假数据；接 core 后替换）EN: Get events for the specific day, replace when Event class is ready
     private List<Event> getEventsFor(LocalDate date) {
-        return eventEdit.getEventsForDay(date);
+        return repository.getEventsForDay(date);
     }
     // CN: 创建一个“事件 pill”标签 EN: make a "eventpill" for those blocks
     private Label makePill(Event e) {
