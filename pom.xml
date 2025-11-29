@@ -19,6 +19,9 @@
         <javafx.version>21.0.4</javafx.version>
     </properties>
     <build>
+        <directory>target</directory>
+        <outputDirectory>target/classes</outputDirectory>
+        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <pluginManagement>
             <plugins>
                 <plugin>

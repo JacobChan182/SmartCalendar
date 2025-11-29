@@ -46,6 +46,34 @@
             <!-- ========= 原来的 Day details 区域 ========= -->
             <Label text="Day details"/>
             <ListView fx:id="dayEvents"/>
+            
+            <Separator/>
+            
+            <Label text="Color Suggestions"/>
+            <HBox spacing="4" alignment="CENTER_LEFT">
+                <TextField fx:id="hexColorInput" promptText="Hex color (e.g., FF5733)" prefWidth="120"/>
+                <Button fx:id="goButton" text="Go!" onAction="#onGoButtonClicked"/>
+            </HBox>
+            <Label fx:id="colorErrorLabel" styleClass="error-label" visible="false"/>
+            
+            <VBox spacing="4" fx:id="colorSchemesContainer">
+                <VBox spacing="2" fx:id="monochromaticContainer">
+                    <Label text="Monochromatic" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="monochromaticColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="analogousContainer">
+                    <Label text="Analogous" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="analogousColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="complementaryContainer">
+                    <Label text="Complementary" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="complementaryColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="neutralContainer">
+                    <Label text="Neutral" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="neutralColors" alignment="CENTER_LEFT"/>
+                </VBox>
+            </VBox>
 
             <!-- 分割线：下面是天气区域 -->
             <Separator/>
