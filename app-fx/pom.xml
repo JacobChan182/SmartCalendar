@@ -31,6 +31,25 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        
+        <!-- Kotlin standard library required by OkHttp (transitive dependency from core) -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+            <version>1.9.24</version>
+        </dependency>
+        
+        <!-- Okio required by OkHttp (transitive dependency from core) -->
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio</artifactId>
+            <version>3.9.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.okio</groupId>
+            <artifactId>okio-jvm</artifactId>
+            <version>3.9.1</version>
+        </dependency>
     </dependencies>
 
     <build>
