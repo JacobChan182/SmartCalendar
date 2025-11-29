@@ -18,14 +18,15 @@ import java.time.*;
 import java.util.List;
 import weather.CoreWeatherUiService;
 import weather.WeatherUiService;
+
 public class MainController implements PropertyChangeListener {
 
-    // ================== 日历 UI 控件 ==================
+    // ================== Calendar UI controls ==================
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
     @FXML private Button btnPrev, btnNext;
     @FXML private ListView<String> dayEvents;
-    
+
     // Color scheme UI components
     @FXML private TextField hexColorInput;
     @FXML private Button goButton;
@@ -36,74 +37,75 @@ public class MainController implements PropertyChangeListener {
     @FXML private HBox complementaryColors;
     @FXML private HBox neutralColors;
 
-    // 当前显示的月份 & 选中的日期
+    // Current displayed month & selected date
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
-    
+
     // Color scheme components
     private ColorSchemeViewModel colorSchemeViewModel;
     private ColorSchemeController colorSchemeController;
 
     // ================== WEATHER: UI fields & service ==================
 
-    // 用户输入城市和国家（TextField 在 FXML 里要有 fx:id）
+    // User input for city and country (TextFields must have fx:id in FXML)
     @FXML private TextField cityField;      // e.g. "Toronto"
     @FXML private TextField countryField;   // e.g. "Canada" or "CA"
 
-    // 显示天气结果的标签（对应 FXML 里的 Label fx:id）
+    // Labels to display weather results (must match fx:id in FXML)
     @FXML private Label weatherLocationLabel;    // "Toronto, Canada"
     @FXML private Label weatherCurrentLabel;     // "Current: 3.4 °C"
     @FXML private Label weatherRangeLabel;       // "Today: -1.0 °C ~ 6.2 °C"
     @FXML private Label weatherConditionLabel;   // "Partly cloudy"
-    @FXML private Label weatherErrorLabel;       // 出错时显示错误信息
+    @FXML private Label weatherErrorLabel;       // Error message, if any
 
-    // UI 访问 core 的入口：内部会连 controller / interactor / gateway
+    // Entry point for UI to access the core weather use case
     private final WeatherUiService weatherService = new CoreWeatherUiService();
 
-    // ================== 初始化（由 JavaFX 自动调用） ==================
+    // ================== Initialization (called automatically by JavaFX) ==================
     @FXML
     private void initialize() {
-        // 上一月 & 下一月按钮
+        // Previous / next month buttons
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
-        // ⭐ 天气：可选，给输入框一个默认值，方便测试
+
+        // Optional: default values for weather search to make testing easier
         if (cityField != null && countryField != null) {
             cityField.setText("Toronto");
             countryField.setText("Canada");
         }
 
-        // 渲染当月日历 + 右侧当天事件列表
+        // Render current month and populate the event list for the selected day
         renderMonth();
         refreshDayDetails();
-        
+
         // Initialize color scheme feature
         initializeColorScheme();
     }
-    
+
     private void initializeColorScheme() {
         // Create ViewModel
         colorSchemeViewModel = new ColorSchemeViewModel();
         colorSchemeViewModel.addPropertyChangeListener(this);
-        
+
         // Create Data Access Object
         GetColorSchemeUserDataAccessInterface colorApiDataAccessObject = new ColorApiDataAccessObject();
-        
+
         // Create Presenter
         ColorSchemePresenter colorSchemePresenter = new ColorSchemePresenter(colorSchemeViewModel);
-        
+
         // Create Interactor
         GetColorSchemeInteractor getColorSchemeInteractor = new GetColorSchemeInteractor(
                 colorApiDataAccessObject,
                 colorSchemePresenter
         );
-        
+
         // Create Controller
         colorSchemeController = new ColorSchemeController(getColorSchemeInteractor);
-        
+
         // Initially hide error label
         colorErrorLabel.setVisible(false);
     }
-    
+
     @FXML
     private void onGoButtonClicked() {
         String hexColor = hexColorInput.getText().trim();
@@ -111,16 +113,16 @@ public class MainController implements PropertyChangeListener {
             showError("Please enter a hex color code");
             return;
         }
-        
+
         colorErrorLabel.setVisible(false);
         colorSchemeController.execute(hexColor);
     }
-    
+
     private void showError(String message) {
         colorErrorLabel.setText(message);
         colorErrorLabel.setVisible(true);
     }
-    
+
     private void displayColors(List<String> colors, HBox container) {
         container.getChildren().clear();
         for (String hex : colors) {
@@ -128,7 +130,7 @@ public class MainController implements PropertyChangeListener {
             container.getChildren().add(colorBox);
         }
     }
-    
+
     private Region createColorBox(String hex) {
         Region colorBox = new Region();
         colorBox.setPrefSize(40, 40);
@@ -138,19 +140,19 @@ public class MainController implements PropertyChangeListener {
                 "-fx-background-color: #%s; -fx-background-radius: 4; -fx-border-color: #cccccc; -fx-border-radius: 4;",
                 hex
         ));
-        
+
         // Add tooltip with hex code
         Tooltip tooltip = new Tooltip("#" + hex);
         Tooltip.install(colorBox, tooltip);
-        
+
         return colorBox;
     }
-    
+
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
         if (evt.getSource() == colorSchemeViewModel) {
             ColorSchemeState state = colorSchemeViewModel.getState();
-            
+
             if (state.getErrorMessage() != null) {
                 showError(state.getErrorMessage());
                 // Clear all color displays
@@ -169,9 +171,9 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
-    // ================== 日历逻辑 ==================
+    // ================== Calendar logic ==================
 
-    /** 改变当前月份（delta 可以是 -1 / +1 等） */
+    /** Change the current month (delta can be -1 / +1 / etc.). */
     private void changeMonth(int delta) {
         current = current.plusMonths(delta);
         selected = current.atDay(Math.min(
@@ -179,12 +181,12 @@ public class MainController implements PropertyChangeListener {
         renderMonth();
     }
 
-    /** 根据 current 渲染整个月的格子 */
+    /** Render the entire month based on the current YearMonth. */
     private void renderMonth() {
         lblYearMonth.setText(current.toString()); // e.g. "2025-11"
         monthGrid.getChildren().clear();
 
-        // title of the table（Mon..Sun）, monday is at the start
+        // Table header (Mon..Sun), Monday at the start
         var headers = List.of("Mon","Tue","Wed","Thu","Fri","Sat","Sun");
         for (int c = 0; c < 7; c++) {
             var hdr = new Label(headers.get(c));
@@ -196,7 +198,7 @@ public class MainController implements PropertyChangeListener {
         int shift = (first.getDayOfWeek().getValue() + 6) % 7; // Mon=0..Sun=6
         int days = current.lengthOfMonth();
 
-        int rowOffset = 1; // starts at line 0
+        int rowOffset = 1; // header row is at index 0
         for (int d = 1; d <= days; d++) {
             int index = shift + (d - 1);
             int col = index % 7;
@@ -206,29 +208,29 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
-    /** 创建单个日期的小方块 cell */
+    /** Create a single day cell. */
     private Node makeDayCell(LocalDate date) {
         VBox box = new VBox(4);
         box.getStyleClass().add("day-cell");
         box.setFillWidth(true);
-        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // 允许拉伸
+        box.setMaxSize(Double.MAX_VALUE, Double.MAX_VALUE);    // allow stretching
         GridPane.setHgrow(box, Priority.ALWAYS);
         GridPane.setVgrow(box, Priority.ALWAYS);
 
         Label title = new Label(Integer.toString(date.getDayOfMonth()));
         title.getStyleClass().add("day-num");
 
-        VBox eventBox = new VBox(4);             // 事件容器
+        VBox eventBox = new VBox(4);             // container for small event pills
         eventBox.getStyleClass().add("event-box");
 
         box.getChildren().addAll(title, eventBox);
 
-        // 初次渲染就填充事件
+        // Fill event pills when first rendering
         fillEventPills(eventBox, date);
 
         box.setOnMouseClicked(e -> {
             selectDay(date);
-            // 右侧列表刷新
+            // refresh right-side list
             refreshDayDetails();
         });
 
@@ -236,14 +238,14 @@ public class MainController implements PropertyChangeListener {
         return box;
     }
 
-    /** 选择某一天 */
+    /** Select a specific day. */
     private void selectDay(LocalDate date) {
         selected = date;
-        refreshDayDetails();        // 点击时也刷新
+        refreshDayDetails();        // also refresh details on click
         renderMonth();
     }
 
-    /** 更新右侧当天事件列表 */
+    /** Update the event list for the selected day. */
     private void refreshDayDetails() {
         List<String> display = getEventsFor(selected).stream()
                 .map(e -> e.title)
@@ -251,10 +253,10 @@ public class MainController implements PropertyChangeListener {
         dayEvents.getItems().setAll(display);
     }
 
-    // ========= demo 用的轻量事件模型（之后可替换成真正 Event 实体） =========
+    // ========= Lightweight demo event model (can be replaced with real Event entity later) =========
     static class EventItem {
-        final String title;      // 展示文本（含时间或科目）
-        final String category;   // 用于着色（如 "course", "exam", "life"...）
+        final String title;      // Text shown for the event (may include time)
+        final String category;   // Category for styling (e.g., "course", "exam", "life"...)
 
         EventItem(String title, String category) {
             this.title = title;
@@ -262,9 +264,9 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
-    /** 取某一天的 demo 事件（假数据） */
+    /** Get demo events for a given day (dummy data). */
     private List<EventItem> getEventsFor(LocalDate date) {
-        // demo：some test data
+        // Some example test data
         if (date.getDayOfMonth() % 7 == 0)
             return List.of(new EventItem("CSC207H • 14:00", "course"),
                     new EventItem("MUS207H • 16:00", "course"),
@@ -277,21 +279,21 @@ public class MainController implements PropertyChangeListener {
         return List.of();
     }
 
-    /** 创建一个“事件 pill”标签 */
+    /** Create a single event “pill” label. */
     private Label makePill(EventItem e) {
         Label pill = new Label(e.title);
-        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // 颜色按类别
+        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // color depends on category
         pill.setMaxWidth(Double.MAX_VALUE);
-        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // 超长省略号
+        pill.setTextOverrun(OverrunStyle.ELLIPSIS); // ellipsis for long text
         return pill;
     }
 
-    /** 给一个日期的事件容器填充 2–3 条 pill，并附加 +n */
+    /** Fill a day's event container with up to 2–3 pills, plus a "+n" label if there are more. */
     private void fillEventPills(VBox eventBox, LocalDate date) {
         eventBox.getChildren().clear();
 
         List<EventItem> list = getEventsFor(date);
-        int limit = 3;                      // 每格最多展示数量
+        int limit = 3;                      // max number of pills shown in a cell
         int shown = Math.min(limit, list.size());
 
         for (int i = 0; i < shown; i++) {
@@ -303,7 +305,7 @@ public class MainController implements PropertyChangeListener {
             moreLbl.getStyleClass().add("event-more");
             eventBox.getChildren().add(moreLbl);
 
-            // 鼠标悬停 tooltip 展示全部
+            // Tooltip with full list of events on hover
             String all = list.stream()
                     .map(it -> "• " + it.title)
                     .reduce((a,b)->a+"\n"+b)
@@ -312,40 +314,40 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
-    // ================== WEATHER: 按钮回调 ==================
+    // ================== WEATHER: button callback ==================
 
     /**
-     * FXML 按钮 onAction="#onWeatherSearchClicked" 会调用这个方法。
+     * This method is called by the FXML button with onAction="#onWeatherSearchClicked".
      *
-     * 流程：
-     *   1. 从 TextField 读取 city / country
-     *   2. 调用 weatherService.fetchWeather(city, country)
-     *   3. 从 weatherService 取出展示文本，更新几个 Label
+     * Flow:
+     *   1. Read city and country from the TextFields
+     *   2. Call weatherService.fetchWeather(city, country)
+     *   3. Read display strings from the service and update the labels
      */
     @FXML
     private void onWeatherSearchClicked() {
         if (cityField == null || countryField == null) {
-            // FXML 没连好，为了防止 NPE，直接返回
+            // FXML not wired correctly; avoid NPE and return early
             return;
         }
 
         String city = cityField.getText();
         String country = countryField.getText();
 
-        // 1) 调用 core 层用例（通过 UI service）
+        // 1) Invoke the core weather use case via the UI service
         weatherService.fetchWeather(city, country);
 
-        // 2) 从 UI service / ViewModel 读取结果
+        // 2) Read the result from the UI service / ViewModel
         String error = weatherService.getError();
         if (error != null && !error.isBlank()) {
-            // 有错误：显示错误信息，清空其它 label
+            // Error: show the error message and clear the other labels
             weatherErrorLabel.setText(error);
             weatherLocationLabel.setText("");
             weatherCurrentLabel.setText("");
             weatherRangeLabel.setText("");
             weatherConditionLabel.setText("");
         } else {
-            // 成功：清空错误，显示天气信息
+            // Success: clear any error and show weather information
             weatherErrorLabel.setText("");
             weatherLocationLabel.setText(weatherService.getLocationDisplay());
             weatherCurrentLabel.setText(weatherService.getCurrentTempText());
