@@ -152,6 +152,12 @@
     -fx-wrap-text: true;
 }
 
+.color-picker-label {
+    -fx-text-fill: #c9c9c9;
+    -fx-font-size: 12px;
+    -fx-padding: 4 0 0 4;
+}
+
 #hexColorInput {
     -fx-background-color: #1a1a1a;
     -fx-text-fill: #e6e6e6;

@@ -23,6 +23,15 @@ public class SQLiteUserDataAccessObject implements SignupUserDataAccessInterface
     private final UserFactory userFactory;
     private String currentUsername;
 
+    // Explicitly load the SQLite JDBC driver
+    static {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("SQLite JDBC driver not found. Make sure sqlite-jdbc is on the classpath.", e);
+        }
+    }
+
     /**
      * Constructs this DAO for saving to and reading from a SQLite database.
      * @param dbPath the path to the SQLite database file

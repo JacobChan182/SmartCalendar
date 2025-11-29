@@ -51,8 +51,8 @@
             
             <Label text="Color Suggestions"/>
             <HBox spacing="4" alignment="CENTER_LEFT">
-                <TextField fx:id="hexColorInput" promptText="Hex color (e.g., FF5733)" prefWidth="120"/>
-                <Button fx:id="goButton" text="Go!" onAction="#onGoButtonClicked"/>
+                <ColorPicker fx:id="colorPicker" onAction="#onColorPicked"/>
+                <Label text="Pick a color" styleClass="color-picker-label"/>
             </HBox>
             <Label fx:id="colorErrorLabel" styleClass="error-label" visible="false"/>
             

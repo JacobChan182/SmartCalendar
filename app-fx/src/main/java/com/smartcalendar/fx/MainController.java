@@ -9,6 +9,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import use_case.get_color_scheme.GetColorSchemeInteractor;
 import use_case.get_color_scheme.GetColorSchemeUserDataAccessInterface;
 
@@ -28,8 +29,7 @@ public class MainController implements PropertyChangeListener {
     @FXML private ListView<String> dayEvents;
 
     // Color scheme UI components
-    @FXML private TextField hexColorInput;
-    @FXML private Button goButton;
+    @FXML private ColorPicker colorPicker;
     @FXML private Label colorErrorLabel;
     @FXML private VBox colorSchemesContainer;
     @FXML private HBox monochromaticColors;
@@ -104,18 +104,39 @@ public class MainController implements PropertyChangeListener {
 
         // Initially hide error label
         colorErrorLabel.setVisible(false);
+        
+        // Set initial color for the color picker (optional - can be removed if you want it to start empty)
+        colorPicker.setValue(Color.WHITE);
     }
 
+    /**
+     * Called when the user picks a color from the color picker.
+     * Automatically fetches color schemes for the selected color.
+     */
     @FXML
-    private void onGoButtonClicked() {
-        String hexColor = hexColorInput.getText().trim();
-        if (hexColor.isEmpty()) {
-            showError("Please enter a hex color code");
+    private void onColorPicked() {
+        Color selectedColor = colorPicker.getValue();
+        if (selectedColor == null) {
             return;
         }
-
+        
+        // Convert Color to hex string (without #)
+        String hexColor = colorToHex(selectedColor);
+        
         colorErrorLabel.setVisible(false);
         colorSchemeController.execute(hexColor);
+    }
+    
+    /**
+     * Converts a JavaFX Color to a hex string (without #).
+     * @param color the JavaFX Color object
+     * @return hex string in format "RRGGBB" (uppercase, no #)
+     */
+    private String colorToHex(Color color) {
+        int r = (int) Math.round(color.getRed() * 255);
+        int g = (int) Math.round(color.getGreen() * 255);
+        int b = (int) Math.round(color.getBlue() * 255);
+        return String.format("%02X%02X%02X", r, g, b);
     }
 
     private void showError(String message) {

@@ -39,6 +39,14 @@ for jar in ~/.m2/repository/org/xerial/sqlite-jdbc/3.44.1.0/*.jar; do
     CLASSPATH="${CLASSPATH}:${jar}"
 done
 
+for jar in ~/.m2/repository/org/slf4j/slf4j-api/2.0.9/*.jar; do
+    CLASSPATH="${CLASSPATH}:${jar}"
+done
+
+for jar in ~/.m2/repository/org/slf4j/slf4j-simple/2.0.9/*.jar; do
+    CLASSPATH="${CLASSPATH}:${jar}"
+done
+
 # Find Java executable (prioritize Java 21+, use Homebrew Java 25 that Maven uses)
 # Try to find Homebrew Java 25 first (what Maven uses)
 HOMEBREW_JAVA=""
