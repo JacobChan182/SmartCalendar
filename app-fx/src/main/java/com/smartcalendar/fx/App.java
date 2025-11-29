@@ -15,7 +15,7 @@ public class App extends Application {
         Parent root = loader.load();
 
         // 2) set Scene/Stage
-        Scene scene = new Scene(root, 1000, 700);
+        Scene scene = new Scene(root, 1280, 900);
         stage.setTitle("SmartCalendar");
         stage.setScene(scene);
         stage.show();

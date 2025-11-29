@@ -16,13 +16,9 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.*;
 import java.util.List;
-
-public class MainController implements PropertyChangeListener {
-// ===== 天气部分：UI 调用的 service 接口 =====
 import weather.CoreWeatherUiService;
 import weather.WeatherUiService;
-
-public class MainController {
+public class MainController implements PropertyChangeListener {
 
     // ================== 日历 UI 控件 ==================
     @FXML private Label lblYearMonth;
