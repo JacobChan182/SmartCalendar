@@ -171,3 +171,51 @@
 #goButton:hover {
     -fx-background-color: #0284c7;
 }
+/* Section title for 'Weather' */
+.section-title {
+    -fx-text-fill: #ffffff;
+    -fx-font-weight: 800;
+    -fx-font-size: 14px;
+}
+
+/* Make ALL weather texts readable on dark background */
+.weather-panel .label {
+    -fx-text-fill: #ffffff;
+    -fx-opacity: 1.0;
+}
+
+/* Hierarchy */
+#weatherCurrentLabel {        /* e.g. 12°C */
+    -fx-font-size: 28px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;
+}
+#weatherLocationLabel {
+    -fx-font-size: 12px;
+    -fx-text-fill: #cbd5e1;
+}
+#weatherRangeLabel,
+#weatherConditionLabel {
+    -fx-font-size: 12px;
+    -fx-text-fill: #d1d5db;
+}
+
+/* Error in weather */
+#weatherErrorLabel,
+.weather-error {
+    -fx-text-fill: #ef4444;   /* red */
+    -fx-font-weight: 700;
+}
+
+/* Color chips (semi-transparent look) */
+.color-pill {
+    -fx-background-radius: 10;
+    -fx-padding: 2 8;
+    -fx-font-size: 11px;
+    -fx-text-fill: #111;
+    -fx-background-insets: 0, 1;
+    -fx-border-color: rgba(255,255,255,0.25);
+    -fx-border-radius: 10;
+    /* You can keep inline HEX background from code, or layer translucency: */
+    /* -fx-background-color: rgba(255,255,255,0.10), rgba(255,255,255,0.30); */
+}
