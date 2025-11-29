@@ -1,4 +1,4 @@
-package entities;
+package entity;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -10,9 +10,9 @@ public class Event {
     private final LocalDateTime end;
     private final String location;
     private final CategoryType category;
-    private final Reminder reminder;
+    private final String reminder;
 
-    public Event(UUID id, String title, LocalDateTime start, LocalDateTime end, String location, CategoryType category, Reminder reminder) {
+    public Event(UUID id, String title, LocalDateTime start, LocalDateTime end, String location, CategoryType category, String reminder) {
         this.id = id;
         this.title = title;
         this.start = start;
@@ -28,7 +28,7 @@ public class Event {
     public LocalDateTime getEnd() { return end; }
     public String getLocation() { return location; }
     public CategoryType getCategory() {return category;}
-    public Reminder getReminder() {return reminder;}
+    public String getReminderMessage() {return reminder;}
 
     @Override
     public String toString() {
@@ -43,7 +43,10 @@ public class Event {
         BUSINESS,
         GYM,
         FORMAL,
-        CASUAL
+        CASUAL,
+        WORK,
+        OFFICE,
+        MEETING
             }
 }
 
