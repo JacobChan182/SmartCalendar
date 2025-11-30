@@ -1,0 +1,135 @@
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.smartcalendar.fx.MainController"
+            stylesheets="@style.css">
+
+    <top>
+        <HBox spacing="8" styleClass="toolbar" alignment="CENTER"
+              BorderPane.alignment="CENTER">
+            <Button fx:id="btnPrev" text="‹"/>
+            <Label fx:id="lblYearMonth" styleClass="title"/>
+            <Button fx:id="btnNext" text="›"/>
+        </HBox>
+    </top>
+
+    <center>
+        <GridPane fx:id="monthGrid" hgap="6" vgap="6" styleClass="month-grid">
+            <columnConstraints>
+                <!-- 7 列，每列 ≈ 100/7% | 7 column, each 100/7 %-->
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+                <ColumnConstraints percentWidth="14.2857" hgrow="ALWAYS"/>
+            </columnConstraints>
+            <rowConstraints>
+                <!-- 第 0 行是表头，固定一点高度 | row 0 is at the top, fixed height -->
+                <RowConstraints prefHeight="36"/>
+                <!-- 下面最多 6 行日期，全部可拉伸 | maximum of 6 row of date, stretchable -->
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+                <RowConstraints vgrow="ALWAYS"/>
+            </rowConstraints>
+        </GridPane>
+    </center>
+
+    <right>
+        <VBox spacing="8" styleClass="sidebar">
+            <Label text = "New Event"/>
+            <TextField fx:id = "titleField" promptText="Title"/>
+            <TextField fx:id = "locationField" promptText="Location"/>
+            <DatePicker fx:id = "datePicker"/>
+            <HBox spacing = "4">
+                    <TextField fx:id = "startField" promptText="Start (HH:mm)"/>
+                    <TextField fx:id = "endField" promptText="End (HH:mm)"/>
+            </HBox>
+
+            <Label text="Category"/>
+            <ComboBox fx:id = "categoryCombo" prefWidth="150"/>
+            <Button text = "Add" onAction="#addEvent"/>
+
+            <Label text="Day details"/>
+            <ListView fx:id="dayEvents"/>
+            <HBox spacing = "8">
+                <Button text="Edit" onAction="#updateEvent"/>
+                <Button text = "Delete" onAction = "#deleteEvent"/>
+
+            </HBox>
+            <!-- ========= 原来的 Day details 区域 ========= -->
+            <Label text="Day details"/>
+            <ListView fx:id="dayEvents"/>
+            
+            <Separator/>
+            
+            <Label text="Color Suggestions"/>
+            <HBox spacing="4" alignment="CENTER_LEFT">
+                <ColorPicker fx:id="colorPicker" onAction="#onColorPicked"/>
+                <Label text="Pick a color" styleClass="color-picker-label"/>
+            </HBox>
+            <Label fx:id="colorErrorLabel" styleClass="error-label" visible="false"/>
+            
+            <VBox spacing="4" fx:id="colorSchemesContainer">
+                <VBox spacing="2" fx:id="monochromaticContainer">
+                    <Label text="Monochromatic" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="monochromaticColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="analogousContainer">
+                    <Label text="Analogous" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="analogousColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="complementaryContainer">
+                    <Label text="Complementary" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="complementaryColors" alignment="CENTER_LEFT"/>
+                </VBox>
+                <VBox spacing="2" fx:id="neutralContainer">
+                    <Label text="Neutral" styleClass="scheme-label"/>
+                    <HBox spacing="4" fx:id="neutralColors" alignment="CENTER_LEFT"/>
+                </VBox>
+            </VBox>
+
+            <!-- 分割线：下面是天气区域 -->
+            <Separator/>
+
+            <!-- ========= Weather 区域（和 MainController 字段一一对应） ========= -->
+            <Label text="Weather"/>
+
+            <!-- 城市 + 国家 输入行 -->
+            <HBox spacing="4">
+                <!-- 对应 @FXML private TextField cityField; -->
+                <TextField fx:id="cityField"
+                           promptText="City (e.g. Toronto)"
+                           HBox.hgrow="ALWAYS"/>
+
+                <!-- 对应 @FXML private TextField countryField; -->
+                <TextField fx:id="countryField"
+                           promptText="Country / Code (e.g. Canada or CA)"
+                           prefWidth="80"/>
+            </HBox>
+
+            <!-- 点击触发 onWeatherSearchClicked() -->
+            <Button text="Get weather"
+                    onAction="#onWeatherSearchClicked"/>
+
+            <!-- 错误信息标签，对应 weatherErrorLabel -->
+            <Label fx:id="weatherErrorLabel"
+                   styleClass="weather-error"/>
+
+            <!-- 天气结果标签，对应 MainController 里的 4 个 Label -->
+            <Label fx:id="weatherLocationLabel"/>
+            <Label fx:id="weatherCurrentLabel"/>
+            <Label fx:id="weatherRangeLabel"/>
+            <Label fx:id="weatherConditionLabel"/>
+        </VBox>
+    </right>
+
+
+
+</BorderPane>
