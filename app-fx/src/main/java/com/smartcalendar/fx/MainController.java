@@ -1,5 +1,7 @@
 package com.smartcalendar.fx;
 
+import entities.Event;
+
 import data_access.ColorApiDataAccessObject;
 import interface_adapter.color_scheme.ColorSchemeController;
 import interface_adapter.color_scheme.ColorSchemePresenter;
@@ -9,6 +11,8 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
+import use_case.event_changes.EventEdit;
+
 import javafx.scene.paint.Color;
 import use_case.get_color_scheme.GetColorSchemeInteractor;
 import use_case.get_color_scheme.GetColorSchemeUserDataAccessInterface;
@@ -16,7 +20,10 @@ import use_case.get_color_scheme.GetColorSchemeUserDataAccessInterface;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 import weather.CoreWeatherUiService;
 import weather.WeatherUiService;
 
@@ -25,8 +32,17 @@ public class MainController implements PropertyChangeListener {
     // ================== Calendar UI controls ==================
     @FXML private Label lblYearMonth;
     @FXML private GridPane monthGrid;
-    @FXML private Button btnPrev, btnNext;
-    @FXML private ListView<String> dayEvents;
+    @FXML private Button btnPrev;
+    @FXML private Button btnNext;
+    @FXML private ListView<Event> dayEvents;
+    @FXML private ComboBox<Event.CategoryType> categoryCombo;
+    @FXML private TextField titleField;
+    @FXML private TextField locationField;
+    @FXML private TextField startField;
+    @FXML private TextField endField;
+    @FXML private DatePicker datePicker;
+
+
 
     // Color scheme UI components
     @FXML private ColorPicker colorPicker;
@@ -41,6 +57,7 @@ public class MainController implements PropertyChangeListener {
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
 
+    private final EventEdit eventEdit = new EventEdit();
     // Color scheme components
     private ColorSchemeViewModel colorSchemeViewModel;
     private ColorSchemeController colorSchemeController;
@@ -67,6 +84,25 @@ public class MainController implements PropertyChangeListener {
         // Previous / next month buttons
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
+        for (Event.CategoryType type : Event.CategoryType.values()) {
+            categoryCombo.getItems().add(type);
+        }
+
+        dayEvents.getSelectionModel().selectedItemProperty()
+                .addListener((observant, old, eventselect) -> {
+                    if (eventselect != null) {
+                        titleField.setText(eventselect.getTitle());
+                        locationField.setText(eventselect.getLocation());
+                        datePicker.setValue(eventselect.getStart().toLocalDate());
+                        startField.setText(eventselect.getStart().toLocalTime().toString());
+                        endField.setText(eventselect.getEnd().toLocalTime().toString());
+                        categoryCombo.setValue(eventselect.getCategory());
+                    }
+                } );
+
+        ;//        if (lblYearMonth != null) {
+//            lblYearMonth.setText("UI OK  (loaded via FXML)");
+//        }
 
         // Optional: default values for weather search to make testing easier
         if (cityField != null && countryField != null) {
@@ -229,6 +265,82 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
+
+    public void addEvent() {
+        try {
+            String title = titleField.getText();
+            String location = locationField.getText();
+            LocalDate date = datePicker.getValue();
+            LocalTime start = LocalTime.parse(startField.getText());
+            LocalTime end = LocalTime.parse(endField.getText());
+            Event.CategoryType category = categoryCombo.getValue();
+
+            Event event = new Event(
+                    UUID.randomUUID(),
+                    title,
+                    LocalDateTime.of(date, start),
+                    LocalDateTime.of(date, end),
+                    location,
+                    category,
+                    null
+            );
+
+            eventEdit.addEvent(event);
+            refreshDayDetails();
+            renderMonth();
+        } catch (Exception ex) {System.err.println("Failed to add event" + ex.getMessage());}
+    }
+
+    public void editEvent() {
+        Event event = dayEvents.getSelectionModel().getSelectedItem();
+        if (event != null) {
+            TextInputDialog dialog = new TextInputDialog(event.getTitle());
+            dialog.setHeaderText("Edit");
+            dialog.setContentText("Title");
+            dialog.showAndWait().ifPresent(newTitle -> {
+                Event updated = new Event(
+                        event.getId(),
+                        newTitle,
+                        event.getStart(),
+                        event.getEnd(),
+                        event.getLocation(),
+                        event.getCategory(),
+                        event.getReminder()
+                );
+                eventEdit.editEvent(event.getId(), updated);
+                refreshDayDetails();
+                renderMonth();
+            });
+        }
+    }
+
+    public void deleteEvent() {
+        Event event = dayEvents.getSelectionModel().getSelectedItem();
+        if (event != null) {
+            eventEdit.deleteEvent(event.getId());
+            refreshDayDetails();;
+            renderMonth();
+        }
+    }
+
+    public void updateEvent() {
+        Event eventSelect = dayEvents.getSelectionModel().getSelectedItem();
+        if (eventSelect != null) {
+            Event updated = new Event(
+                    eventSelect.getId(),
+                    titleField.getText(),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(startField.getText())),
+                    LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
+                    locationField.getText(),
+                    categoryCombo.getValue(),
+                    eventSelect.getReminder()
+            );
+            eventEdit.editEvent(eventSelect.getId(), updated);
+            refreshDayDetails();
+            renderMonth();
+        }
+    }
+
     /** Create a single day cell. */
     private Node makeDayCell(LocalDate date) {
         VBox box = new VBox(4);
@@ -283,6 +395,9 @@ public class MainController implements PropertyChangeListener {
             this.title = title;
             this.category = category;
         }
+        dayEvents.getItems().setAll(getEventsFor(selected));
+    
+
     }
 
     /** Get demo events for a given day (dummy data). */

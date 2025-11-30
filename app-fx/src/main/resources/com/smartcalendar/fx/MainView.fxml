@@ -43,6 +43,26 @@
 
     <right>
         <VBox spacing="8" styleClass="sidebar">
+            <Label text = "New Event"/>
+            <TextField fx:id = "titleField" promptText="Title"/>
+            <TextField fx:id = "locationField" promptText="Location"/>
+            <DatePicker fx:id = "datePicker"/>
+            <HBox spacing = "4">
+                    <TextField fx:id = "startField" promptText="Start (HH:mm)"/>
+                    <TextField fx:id = "endField" promptText="End (HH:mm)"/>
+            </HBox>
+
+            <Label text="Category"/>
+            <ComboBox fx:id = "categoryCombo" prefWidth="150"/>
+            <Button text = "Add" onAction="#addEvent"/>
+
+            <Label text="Day details"/>
+            <ListView fx:id="dayEvents"/>
+            <HBox spacing = "8">
+                <Button text="Edit" onAction="#updateEvent"/>
+                <Button text = "Delete" onAction = "#deleteEvent"/>
+
+            </HBox>
             <!-- ========= 原来的 Day details 区域 ========= -->
             <Label text="Day details"/>
             <ListView fx:id="dayEvents"/>
@@ -109,5 +129,7 @@
             <Label fx:id="weatherConditionLabel"/>
         </VBox>
     </right>
+
+
 
 </BorderPane>
