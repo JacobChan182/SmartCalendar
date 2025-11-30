@@ -1,6 +1,6 @@
 package com.smartcalendar.fx;
 
-import entities.Event;
+import entity.Event;
 
 import data_access.ColorApiDataAccessObject;
 import interface_adapter.color_scheme.ColorSchemeController;
@@ -305,7 +305,7 @@ public class MainController implements PropertyChangeListener {
                         event.getEnd(),
                         event.getLocation(),
                         event.getCategory(),
-                        event.getReminder()
+                        event.getReminderMessage()
                 );
                 eventEdit.editEvent(event.getId(), updated);
                 refreshDayDetails();
@@ -333,7 +333,7 @@ public class MainController implements PropertyChangeListener {
                     LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
                     locationField.getText(),
                     categoryCombo.getValue(),
-                    eventSelect.getReminder()
+                    eventSelect.getReminderMessage()
             );
             eventEdit.editEvent(eventSelect.getId(), updated);
             refreshDayDetails();
@@ -380,10 +380,8 @@ public class MainController implements PropertyChangeListener {
 
     /** Update the event list for the selected day. */
     private void refreshDayDetails() {
-        List<String> display = getEventsFor(selected).stream()
-                .map(e -> e.title)
-                .toList();
-        dayEvents.getItems().setAll(display);
+        List<Event> events = eventEdit.getEventsForDay(selected);
+        dayEvents.getItems().setAll(events);
     }
 
     // ========= Lightweight demo event model (can be replaced with real Event entity later) =========
@@ -395,9 +393,6 @@ public class MainController implements PropertyChangeListener {
             this.title = title;
             this.category = category;
         }
-        dayEvents.getItems().setAll(getEventsFor(selected));
-    
-
     }
 
     /** Get demo events for a given day (dummy data). */
