@@ -1,6 +1,6 @@
 package use_case.event_changes;
 
-import entities.Event;
+import entity.Event;
 
 import java.util.*;
 

@@ -1,227 +1,246 @@
-.root { -fx-font-size: 14px; }
-.month-grid { -fx-padding: 10; }
-.weekday { -fx-font-weight: bold; -fx-opacity: 0.7; }
-
-
-.day-cell {
-    -fx-padding: 8;
-    -fx-background-color: -fx-base;
-    -fx-background-radius: 8;
-}
-.day-cell:hover { -fx-background-color: derive(-fx-base, 10%); }
-.day-cell.selected {
-    -fx-background-color: -fx-accent;
-    -fx-text-fill: white;
+/* ============ Global ============ */
+.root {
+    -fx-font-size: 14px;
+    -fx-background-color: #000000;
+    -fx-text-fill: #e6e6e6;
 }
 
-.day-num { -fx-font-weight: bold; }
-.event-dots { -fx-min-height: 6; -fx-max-height: 6; }
-
-
-
-.month-grid { -fx-padding: 10; }
-.day-cell { -fx-padding: 8; -fx-background-radius: 8; }
-
-
+/* Top toolbar (year/month + arrows) */
+.toolbar {
+    -fx-padding: 12 16;
+}
 
 .title {
-    -fx-font-size: 30px;   /* CN: 24~32 自行调 EN: font size */
+    -fx-font-size: 30px;
     -fx-font-weight: 800;
     -fx-text-fill: #ffffff;
 }
-.toolbar {
-    -fx-padding: 12 16;    /* CN: 上下左右内边距，视觉更舒服 EN: Top, bottom, left and right padding*/
+
+/* ============ Month grid ============ */
+
+.month-grid {
+    -fx-padding: 10;
 }
 
-/* CN：每天小格子的排版 EN: composing of blocks */
+.weekday {
+    -fx-font-weight: bold;
+    -fx-opacity: 0.7;
+}
+
+/* Single day cell */
 .day-cell {
     -fx-padding: 10;
-    -fx-background-color: #000000;
+    -fx-background-color: #111111;
     -fx-background-radius: 12;
+
+    /* Keep all rows the same height, even when there are many events */
+    -fx-pref-height: 120;
+    -fx-min-height: 120;
+    -fx-max-height: 120;
 }
+
+.day-cell:hover {
+    -fx-background-color: #232323;
+}
+
 .day-cell.selected {
-    -fx-background-color: -fx-accent;
+    -fx-background-color: #0ea5e9;
     -fx-text-fill: white;
 }
+
 .day-num {
-    -fx-font-weight: 700;
+    -fx-font-weight: 800;
+    -fx-text-fill: #e6e6e6;
     -fx-opacity: 0.9;
 }
 
-/* CN: 事件容器和 pill EN: event container and pill */
+/* Container inside each day for event pills */
 .event-box {
     -fx-spacing: 4;
 }
+
+/* ============ Event pills in month cells ============ */
+
 .event-pill {
-    -fx-padding: 2 8;
-    -fx-background-radius: 10;
-    -fx-font-size: 11px;
-    -fx-max-width: infinity;
-    -fx-text-overrun: ellipsis;
-}
-/* CN: 类别色（可按你们的学科/类型定义）EN: color for each category */
-/* CN:蓝色（课程）——半透明背景 + 细边框 EN: class in blue*/
-.pill-course  {
-    -fx-background-color:
-        rgba(86,160,255,0.18),          /*CN: 外层淡色雾感 EN: outer color */
-        rgba(86,160,255,0.35);          /* Inner color */
-    -fx-background-insets: 0, 1;        /* addon */
-    -fx-background-radius: 10, 9;
-    -fx-border-color: rgba(86,160,255,0.55);
-    -fx-border-radius: 10;
-    -fx-text-fill: #dbe9ff;
-}
-/* CN: 绿色（工作/学习） EN: green for work and study*/
-.pill-work {
-    -fx-background-color: rgba(40,199,111,0.20), rgba(40,199,111,0.35);
-    -fx-background-insets: 0, 1;
-    -fx-background-radius: 10, 9;
-    -fx-border-color: rgba(40,199,111,0.55);
-    -fx-border-radius: 10;
-    -fx-text-fill: #d7ffe7;
+    -fx-background-radius: 999;
+    -fx-padding: 1 6;
+    -fx-font-size: 10px;
+    -fx-text-fill: #f5f5f5;
+    -fx-background-color: #333333;
 }
 
-/* CN: 紫色（日常/生活） EN: Purple for life */
-.pill-life {
-    -fx-background-color: rgba(157,106,255,0.18), rgba(157,106,255,0.35);
-    -fx-background-insets: 0, 1;
-    -fx-background-radius: 10, 9;
-    -fx-border-color: rgba(157,106,255,0.55);
-    -fx-border-radius: 10;
-    -fx-text-fill: #efe6ff;
-}
+/* Color variants by category */
+.pill-course   { -fx-background-color: #3b82f6; }
+.pill-exam     { -fx-background-color: #f97316; }
+.pill-life     { -fx-background-color: #22c55e; }
+.pill-work     { -fx-background-color: #a855f7; }
 
-/* CN:“+n” 更多标签 EN: the "+n" */
 .event-more {
-    -fx-font-size: 11px;
-    -fx-text-fill: #a8b0b9;
-}
-/* Background color */
-.root {
-    -fx-background-color: #121212;      /* Dark theme */
+    -fx-font-size: 9px;
+    -fx-text-fill: #bbbbbb;
 }
 
-/* Toolbar and Sidebar */
-.toolbar { -fx-padding: 12 16; }
-.sidebar { -fx-background-color: #121212; }
+/* ============ Right side day details ListView ============ */
 
-/* Month and weekday */
-.month-grid { -fx-padding: 10; }
-.weekday { -fx-text-fill: #c9c9c9; -fx-font-weight: 700; }
-
-.day-cell {
-    -fx-padding: 10;
-    -fx-background-color: #1a1a1a;      /* dark grey */
-    -fx-background-radius: 12;
-}
-.day-cell:hover    { -fx-background-color: #232323; }
-.day-cell.selected {
-    -fx-background-color: #0ea5e9;      /* Highlight */
-    -fx-text-fill: white;
-}
-.day-num { -fx-font-weight: 800; -fx-text-fill: #e6e6e6; }
-
-/* right side ListView */
 .list-view {
     -fx-background-insets: 0;
-    -fx-background-color: transparent;  /* inherit the dark mode from root */
+    -fx-background-color: transparent;
 }
+
 .list-cell {
-    -fx-background-color: #1a1a1a;
+    -fx-background-color: #111111;
     -fx-text-fill: #eaeaea;
+    -fx-padding: 6 8;
 }
-.list-cell:empty { -fx-background-color: transparent; }
-.list-cell:selected {
-    -fx-background-color: #2a7fff;
+
+.list-cell:filled:selected,
+.list-cell:filled:selected:focused {
+    -fx-background-color: #2a2a2a;
     -fx-text-fill: white;
 }
-.button { -fx-background-color: #2a2a2a; -fx-text-fill: #eee; }
-.scroll-bar:vertical, .scroll-bar:horizontal { -fx-background-color: #121212; }
 
-/* Color Scheme UI */
-.scheme-label {
-    -fx-font-size: 12px;
-    -fx-font-weight: 600;
-    -fx-text-fill: #c9c9c9;
-    -fx-padding: 4 0 2 0;
-}
+/* ============ Forms on the right (New Event / Weather / Color) ============ */
 
-.error-label {
-    -fx-text-fill: #ff6b6b;
-    -fx-font-size: 11px;
-    -fx-wrap-text: true;
-}
-
-.color-picker-label {
-    -fx-text-fill: #c9c9c9;
-    -fx-font-size: 12px;
-    -fx-padding: 4 0 0 4;
-}
-
-#hexColorInput {
+.text-field,
+.password-field,
+.combo-box-base {
     -fx-background-color: #1a1a1a;
-    -fx-text-fill: #e6e6e6;
-    -fx-border-color: #3a3a3a;
-    -fx-border-radius: 4;
-    -fx-padding: 6;
+    -fx-text-fill: #ffffff;
+    -fx-background-radius: 6;
+    -fx-padding: 4 6;
+    -fx-border-radius: 6;
+    -fx-border-color: #333333;
 }
 
-#goButton {
-    -fx-background-color: #0ea5e9;
-    -fx-text-fill: white;
+.button {
+    -fx-background-color: #2a2a2a;
+    -fx-text-fill: #000000;
+    -fx-background-radius: 6;
+    -fx-padding: 4 10;
     -fx-font-weight: 600;
-    -fx-padding: 6 16;
-    -fx-background-radius: 4;
 }
 
-#goButton:hover {
+.button:hover {
+    -fx-background-color: #38bdf8;
+}
+
+.button:pressed {
     -fx-background-color: #0284c7;
 }
-/* Section title for 'Weather' */
+
+/* Small section titles on the right */
 .section-title {
-    -fx-text-fill: #ffffff;
-    -fx-font-weight: 800;
-    -fx-font-size: 14px;
-}
-
-/* Make ALL weather texts readable on dark background */
-.weather-panel .label {
-    -fx-text-fill: #ffffff;
-    -fx-opacity: 1.0;
-}
-
-/* Hierarchy */
-#weatherCurrentLabel {        /* e.g. 12°C */
-    -fx-font-size: 28px;
-    -fx-font-weight: 800;
-    -fx-text-fill: #ffffff;
-}
-#weatherLocationLabel {
-    -fx-font-size: 12px;
-    -fx-text-fill: #cbd5e1;
-}
-#weatherRangeLabel,
-#weatherConditionLabel {
-    -fx-font-size: 12px;
-    -fx-text-fill: #d1d5db;
-}
-
-/* Error in weather */
-#weatherErrorLabel,
-.weather-error {
-    -fx-text-fill: #ef4444;   /* red */
     -fx-font-weight: 700;
+    -fx-text-fill: #e6e6e6;
 }
 
-/* Color chips (semi-transparent look) */
+/* ============ Color Suggestions ============ */
+
+.scheme-label {
+    -fx-font-weight: 700;
+    -fx-text-fill: #e6e6e6;
+}
+
+/* Small pretty chips for color hex labels, if you use them */
 .color-pill {
     -fx-background-radius: 10;
     -fx-padding: 2 8;
     -fx-font-size: 11px;
-    -fx-text-fill: #111;
+    -fx-text-fill: #111111;
     -fx-background-insets: 0, 1;
     -fx-border-color: rgba(255,255,255,0.25);
     -fx-border-radius: 10;
-    /* You can keep inline HEX background from code, or layer translucency: */
-    /* -fx-background-color: rgba(255,255,255,0.10), rgba(255,255,255,0.30); */
+}
+
+/* ============ Weather block ============ */
+
+.weather-error {
+    -fx-text-fill: #f97373;
+    -fx-font-size: 12px;
+}
+
+.weather-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #e6e6e6;
+}
+
+/* ============ Misc ============ */
+
+/* Optional: thin separators */
+.separator *.line {
+    -fx-background-color: #333333;
+}
+
+/* ScrollPane background inherit root */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* ======== Weather section styling (using existing labels) ======== */
+
+/* Error message label: weatherErrorLabel */
+.weather-error,
+#weatherErrorLabel {
+    -fx-font-size: 12px;
+    -fx-text-fill: #ff6b6b;
+}
+
+/* Location label: e.g. "Toronto, Canada" */
+#weatherLocationLabel {
+    -fx-font-size: 13px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #e6e6e6;
+}
+
+/* Current temperature label: e.g. "Current: 3.4 °C" */
+#weatherCurrentLabel {
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #ffffff;   /* change this accent color if you like */
+}
+
+/* Daily range label: e.g. "Today: -1 °C ~ 6 °C" */
+#weatherRangeLabel {
+    -fx-font-size: 12px;
+    -fx-text-fill: #cfcfcf;
+}
+
+/* Condition label: e.g. "Partly cloudy" */
+#weatherConditionLabel {
+    -fx-font-size: 12px;
+    -fx-text-fill: #e6e6e6;
+}
+
+/* ======== Dialog styling to match main window ======== */
+
+.dialog-pane {
+    -fx-background-color: #000000;
+    -fx-text-fill: #e6e6e6;
+}
+
+.dialog-pane > .content {
+    -fx-padding: 12;
+}
+
+/* Header text (if you ever use setHeaderText) */
+.dialog-pane > .header-panel {
+    -fx-background-color: #000000;
+    -fx-padding: 8 12 4 12;
+}
+
+/* Buttons inside the dialog reuse the .button style, but we can tweak spacing */
+.dialog-pane .button-bar {
+    -fx-padding: 8 12 12 12;
+}
+
+/* ======== Sidebar titles: "Day details" & "Color Suggestions" ======== */
+
+#dayDetailsLabel,
+#colorSuggestionsLabel {
+    -fx-font-size: 15px;      /* slightly larger than default */
+    -fx-font-weight: 700;
+    -fx-text-fill: #ffffff;   /* pure white */
 }

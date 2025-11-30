@@ -1,6 +1,6 @@
 package com.smartcalendar.fx;
 
-import entities.Event;
+import entity.Event;
 
 import data_access.ColorApiDataAccessObject;
 import interface_adapter.color_scheme.ColorSchemeController;
@@ -23,6 +23,7 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import weather.CoreWeatherUiService;
 import weather.WeatherUiService;
@@ -84,25 +85,33 @@ public class MainController implements PropertyChangeListener {
         // Previous / next month buttons
         btnPrev.setOnAction(e -> changeMonth(-1));
         btnNext.setOnAction(e -> changeMonth(1));
-        for (Event.CategoryType type : Event.CategoryType.values()) {
-            categoryCombo.getItems().add(type);
+
+        // ====== (optional) only wire the edit form when it actually exists in the FXML ======
+        // In the new layout, the right-side edit fields are removed,
+        // so categoryCombo / titleField / datePicker etc. will be null.
+        // We guard with a null-check so the app still works.
+        if (categoryCombo != null) {
+            // old layout: combo box present -> fill category options
+            categoryCombo.getItems().setAll(Event.CategoryType.values());
         }
 
-        dayEvents.getSelectionModel().selectedItemProperty()
-                .addListener((observant, old, eventselect) -> {
-                    if (eventselect != null) {
-                        titleField.setText(eventselect.getTitle());
-                        locationField.setText(eventselect.getLocation());
-                        datePicker.setValue(eventselect.getStart().toLocalDate());
-                        startField.setText(eventselect.getStart().toLocalTime().toString());
-                        endField.setText(eventselect.getEnd().toLocalTime().toString());
-                        categoryCombo.setValue(eventselect.getCategory());
-                    }
-                } );
+        if (dayEvents != null && titleField != null &&
+                locationField != null && datePicker != null &&
+                startField != null && endField != null &&
+                categoryCombo != null) {
 
-        ;//        if (lblYearMonth != null) {
-//            lblYearMonth.setText("UI OK  (loaded via FXML)");
-//        }
+            dayEvents.getSelectionModel().selectedItemProperty()
+                    .addListener((obs, old, eventselect) -> {
+                        if (eventselect != null) {
+                            titleField.setText(eventselect.getTitle());
+                            locationField.setText(eventselect.getLocation());
+                            datePicker.setValue(eventselect.getStart().toLocalDate());
+                            startField.setText(eventselect.getStart().toLocalTime().toString());
+                            endField.setText(eventselect.getEnd().toLocalTime().toString());
+                            categoryCombo.setValue(eventselect.getCategory());
+                        }
+                    });
+        }
 
         // Optional: default values for weather search to make testing easier
         if (cityField != null && countryField != null) {
@@ -110,13 +119,19 @@ public class MainController implements PropertyChangeListener {
             countryField.setText("Canada");
         }
 
-        // Render current month and populate the event list for the selected day
+        // Render current month
         renderMonth();
-        refreshDayDetails();
 
-        // Initialize color scheme feature
+    // Populate the event list for the selected day (if the ListView exists)
+        if (dayEvents != null) {
+            refreshDayDetails();
+        }
+
+    // Initialize color scheme feature
         initializeColorScheme();
+
     }
+
 
     private void initializeColorScheme() {
         // Create ViewModel
@@ -140,7 +155,7 @@ public class MainController implements PropertyChangeListener {
 
         // Initially hide error label
         colorErrorLabel.setVisible(false);
-        
+
         // Set initial color for the color picker (optional - can be removed if you want it to start empty)
         colorPicker.setValue(Color.WHITE);
     }
@@ -155,14 +170,14 @@ public class MainController implements PropertyChangeListener {
         if (selectedColor == null) {
             return;
         }
-        
+
         // Convert Color to hex string (without #)
         String hexColor = colorToHex(selectedColor);
-        
+
         colorErrorLabel.setVisible(false);
         colorSchemeController.execute(hexColor);
     }
-    
+
     /**
      * Converts a JavaFX Color to a hex string (without #).
      * @param color the JavaFX Color object
@@ -291,6 +306,7 @@ public class MainController implements PropertyChangeListener {
         } catch (Exception ex) {System.err.println("Failed to add event" + ex.getMessage());}
     }
 
+    @FXML
     public void editEvent() {
         Event event = dayEvents.getSelectionModel().getSelectedItem();
         if (event != null) {
@@ -305,7 +321,7 @@ public class MainController implements PropertyChangeListener {
                         event.getEnd(),
                         event.getLocation(),
                         event.getCategory(),
-                        event.getReminder()
+                        event.getReminderMessage()
                 );
                 eventEdit.editEvent(event.getId(), updated);
                 refreshDayDetails();
@@ -314,6 +330,7 @@ public class MainController implements PropertyChangeListener {
         }
     }
 
+    @FXML
     public void deleteEvent() {
         Event event = dayEvents.getSelectionModel().getSelectedItem();
         if (event != null) {
@@ -333,7 +350,7 @@ public class MainController implements PropertyChangeListener {
                     LocalDateTime.of(datePicker.getValue(), LocalTime.parse(endField.getText())),
                     locationField.getText(),
                     categoryCombo.getValue(),
-                    eventSelect.getReminder()
+                    eventSelect.getReminderMessage()
             );
             eventEdit.editEvent(eventSelect.getId(), updated);
             refreshDayDetails();
@@ -362,9 +379,14 @@ public class MainController implements PropertyChangeListener {
         fillEventPills(eventBox, date);
 
         box.setOnMouseClicked(e -> {
-            selectDay(date);
-            // refresh right-side list
-            refreshDayDetails();
+            if (e.getClickCount() == 2) {
+                // double-click: open a small window to create a new event
+                openNewEventDialog(date);
+            } else {
+                // single-click: just select day and refresh details
+                selectDay(date);
+                refreshDayDetails();
+            }
         });
 
         if (date.equals(selected)) box.getStyleClass().add("selected");
@@ -380,45 +402,27 @@ public class MainController implements PropertyChangeListener {
 
     /** Update the event list for the selected day. */
     private void refreshDayDetails() {
-        List<String> display = getEventsFor(selected).stream()
-                .map(e -> e.title)
-                .toList();
-        dayEvents.getItems().setAll(display);
-    }
-
-    // ========= Lightweight demo event model (can be replaced with real Event entity later) =========
-    static class EventItem {
-        final String title;      // Text shown for the event (may include time)
-        final String category;   // Category for styling (e.g., "course", "exam", "life"...)
-
-        EventItem(String title, String category) {
-            this.title = title;
-            this.category = category;
+        // When the ListView is not present in the FXML (e.g. layout changed),
+        // simply do nothing to avoid NullPointerException.
+        if (dayEvents == null) {
+            return;
         }
-        dayEvents.getItems().setAll(getEventsFor(selected));
-    
 
+        List<Event> events = getEventsFor(selected);
+        dayEvents.getItems().setAll(events);
     }
 
-    /** Get demo events for a given day (dummy data). */
-    private List<EventItem> getEventsFor(LocalDate date) {
-        // Some example test data
-        if (date.getDayOfMonth() % 7 == 0)
-            return List.of(new EventItem("CSC207H • 14:00", "course"),
-                    new EventItem("MUS207H • 16:00", "course"),
-                    new EventItem("Gym • 19:00", "life"),
-                    new EventItem("…", "life"));
-        if (date.equals(LocalDate.now()))
-            return List.of(new EventItem("Standup 09:00", "work"),
-                    new EventItem("Lunch 13:30", "life"),
-                    new EventItem("Gym 19:00", "life"));
-        return List.of();
+    private List<Event> getEventsFor(LocalDate date) {
+        return eventEdit.getEventsForDay(date);
     }
+
+
 
     /** Create a single event “pill” label. */
-    private Label makePill(EventItem e) {
-        Label pill = new Label(e.title);
-        pill.getStyleClass().addAll("event-pill", "pill-" + e.category); // color depends on category
+    private Label makePill(Event e) {
+        Label pill = new Label(e.getTitle());
+        pill.getStyleClass().addAll("event-pill", "pill-"
+                + e.getCategory().name().toLowerCase()); // CN：颜色按类别 EN：colors-category
         pill.setMaxWidth(Double.MAX_VALUE);
         pill.setTextOverrun(OverrunStyle.ELLIPSIS); // ellipsis for long text
         return pill;
@@ -428,8 +432,8 @@ public class MainController implements PropertyChangeListener {
     private void fillEventPills(VBox eventBox, LocalDate date) {
         eventBox.getChildren().clear();
 
-        List<EventItem> list = getEventsFor(date);
-        int limit = 3;                      // max number of pills shown in a cell
+        List<Event> list = getEventsFor(date);
+        int limit = 3;                      // CN: 每格最多展示数量 EN: Maximum number of pills in each block
         int shown = Math.min(limit, list.size());
 
         for (int i = 0; i < shown; i++) {
@@ -442,13 +446,107 @@ public class MainController implements PropertyChangeListener {
             eventBox.getChildren().add(moreLbl);
 
             // Tooltip with full list of events on hover
-            String all = list.stream()
-                    .map(it -> "• " + it.title)
-                    .reduce((a,b)->a+"\n"+b)
-                    .orElse("");
+            String all = list.stream().map(it -> "• "
+                    + it.getTitle()).reduce((a,b)->a+"\n"+b).orElse("");
             Tooltip.install(eventBox, new Tooltip(all));
         }
     }
+
+    private void openNewEventDialog(LocalDate defaultDate) {
+        // Dialog that returns an Event when user clicks "Create"
+        Dialog<Event> dialog = new Dialog<>();
+        dialog.setTitle("New Event - " + defaultDate);
+
+        // Make dialog modal relative to the main window
+        if (lblYearMonth != null && lblYearMonth.getScene() != null) {
+            dialog.initOwner(lblYearMonth.getScene().getWindow());
+        }
+
+        DialogPane pane = dialog.getDialogPane();
+
+        // Apply the same stylesheet as the main scene
+        pane.getStylesheets().add(
+                getClass().getResource("style.css").toExternalForm()
+        );
+        // Optional: extra style class for dialog-specific tweaks
+        pane.getStyleClass().add("dialog-pane");
+
+        // Custom English buttons
+        ButtonType createButton = new ButtonType("Create", ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        pane.getButtonTypes().addAll(createButton, cancelButton);
+
+        // --- form controls inside the dialog ---
+        TextField titleField = new TextField();
+        TextField locationField = new TextField();
+        DatePicker datePicker = new DatePicker(defaultDate);
+        TextField startField = new TextField();
+        TextField endField = new TextField();
+
+        ComboBox<Event.CategoryType> categoryBox = new ComboBox<>();
+        categoryBox.getItems().setAll(Event.CategoryType.values());
+        categoryBox.setValue(Event.CategoryType.CASUAL);
+
+        // layout inside the dialog
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(6);
+
+        int row = 0;
+        grid.add(new Label("Title:"), 0, row);
+        grid.add(titleField, 1, row++);
+        grid.add(new Label("Location:"), 0, row);
+        grid.add(locationField, 1, row++);
+        grid.add(new Label("Date:"), 0, row);
+        grid.add(datePicker, 1, row++);
+        grid.add(new Label("Start (HH:mm):"), 0, row);
+        grid.add(startField, 1, row++);
+        grid.add(new Label("End (HH:mm):"), 0, row);
+        grid.add(endField, 1, row++);
+        grid.add(new Label("Category:"), 0, row);
+        grid.add(categoryBox, 1, row++);
+
+        pane.setContent(grid);
+
+        // When user clicks "Create", try to build an Event
+        dialog.setResultConverter(button -> {
+            if (button == createButton) {
+                try {
+                    String title = titleField.getText();
+                    String location = locationField.getText();
+                    LocalDate date = datePicker.getValue();
+                    LocalTime start = LocalTime.parse(startField.getText());
+                    LocalTime end = LocalTime.parse(endField.getText());
+                    Event.CategoryType category = categoryBox.getValue();
+
+                    return new Event(
+                            UUID.randomUUID(),
+                            title,
+                            LocalDateTime.of(date, start),
+                            LocalDateTime.of(date, end),
+                            location,
+                            category,
+                            null // reminder message (optional)
+                    );
+                } catch (Exception ex) {
+                    // parsing failed etc. -> stay on dialog
+                    ex.printStackTrace();
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        Optional<Event> result = dialog.showAndWait();
+        if (result.isPresent()) {
+            Event event = result.get();
+            eventEdit.addEvent(event);
+            refreshDayDetails();
+            renderMonth();
+        }
+    }
+
+
 
     // ================== WEATHER: button callback ==================
 
