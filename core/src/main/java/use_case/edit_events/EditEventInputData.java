@@ -1,5 +1,7 @@
 package use_case.edit_events;
 
+import entity.Event;
+
 import java.util.UUID;
 import java.time.LocalDateTime;
 
@@ -9,11 +11,11 @@ public class EditEventInputData {
     private final LocalDateTime start;
     private final LocalDateTime end;
     private final String location;
-    private final CategoryType category;
-    private final Reminder reminder;
+    private final Event.CategoryType category;
+    private final String reminder;
 
     public EditEventInputData(UUID id, String title, LocalDateTime start, LocalDateTime end,
-                              String location, CategoryType category, Reminder reminder){
+                              String location, Event.CategoryType category, String reminder){
         this.id = id;
         this.title = title;
         this.start = start;
@@ -28,7 +30,7 @@ public class EditEventInputData {
     public LocalDateTime getStart() {return start;}
     public LocalDateTime getEnd() {return end;}
     public String getLocation() {return location;}
-    public CategoryType getCategory() {return category;}
-    public Reminder getReminder() {return reminder;}
+    public Event.CategoryType getCategory() {return category;}
+    public String getReminder() {return reminder;}
 
 }

@@ -2,18 +2,16 @@ package use_case.edit_events;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 import entity.Event;
-import entity.CategoryType;
-import entity.Reminder;
+import use_case.addEvent.EventMethodsDataAccessInterface;
 
 public class EditEventInteractor implements EditEventInputBoundary {
-    private final EditEventEventDataAccessInterface editEventEventDataAccessObject;
+    private final EventMethodsDataAccessInterface eventMethodsDataAccess;
     private final EditEventOutputBoundary editEventPresenter;
 
-    public EditEventInteractor(EditEventEventDataAccessInterface editEventEventDataAccessInterface,
+    public EditEventInteractor(EventMethodsDataAccessInterface eventMethodsDataAccess,
                                EditEventOutputBoundary editEventPresenter) {
-        this.editEventEventDataAccessObject = editEventEventDataAccessInterface;
+        this.eventMethodsDataAccess = eventMethodsDataAccess;
         this.editEventPresenter = editEventPresenter;
     }
 
@@ -22,14 +20,13 @@ public class EditEventInteractor implements EditEventInputBoundary {
 
         // Load existing event
         UUID id = editEventInputData.getId();
-        Event event = editEventEventDataAccessObject.get(id);
 
-        if (event == null) {
+        if (!eventMethodsDataAccess.existById(id)) {
             editEventPresenter.prepareFailView("Event does not exist.");
             return;
         }
 
-
+        Event event = eventMethodsDataAccess.get(id);
         // Assigning Title
         String newTitle;
         if (editEventInputData.getTitle() == null || editEventInputData.getTitle().isEmpty()) {
@@ -38,72 +35,69 @@ public class EditEventInteractor implements EditEventInputBoundary {
             newTitle = editEventInputData.getTitle();
         }
 
-        event.setTitle(newTitle);
 
         // Assigning start and end time
-        LocalDateTime newStart;
-        LocalDateTime newEnd;
-        if (editEventInputData.getStart() == null) {
+        LocalDateTime newStart = editEventInputData.getStart();
+        if (newStart == null) {
             newStart = event.getStart();
-        } else if (editEventInputData.getStart() != null) {
-            newStart = editEventInputData.getStart();
         }
-        if (editEventInputData.getEnd() == null) {
+
+        LocalDateTime newEnd = editEventInputData.getEnd();
+        if (newEnd == null) {
             newEnd = event.getEnd();
-        } else if (editEventInputData.getEnd() != null) {
-            newEnd = editEventInputData.getEnd();
         }
+
         if (newEnd.isBefore(newStart)) {
             editEventPresenter.prepareFailView("End time cannot be before start time");
             return;
         }
 
-        event.setStart(newStart);
-        event.setEnd(newEnd);
 
         // Assigning location
-        String newLocation;
-        if (editEventInputData.getLocation() == null || editEventInputData.getLocation().isEmpty()) {
+        String newLocation = editEventInputData.getLocation();
+        if (newLocation == null || newLocation.isEmpty()) {
             newLocation = event.getLocation();
-        } else if (editEventInputData.getLocation() != null) {
-            newLocation = editEventInputData.getLocation();
         }
-
-        event.set(newLocation);
 
         // Assigning category
-        CategoryType newCategory;
-        if (editEventInputData.getCategory() == null) {
+        Event.CategoryType newCategory = editEventInputData.getCategory();
+        if (newCategory == null) {
             newCategory = event.getCategory();
-        } else if (editEventInputData.getCategory() != null) {
-            newCategory = editEventInputData.getCategory();
         }
 
-        event.setCategory(newCategory);
 
         // Assigning reminder
-        Reminder newReminder;
-        if (editEventInputData.getReminder() == null) {
-            newReminder = event.getReminder();
-        } else if (editEventInputData.getReminder() != null) {
-            newReminder = editEventInputData.getReminder();
+        String newReminder = editEventInputData.getReminder();
+        if (newReminder == null) {
+            newReminder = event.getReminderMessage();
         }
 
-        event.setReminder(newReminder);
-
-
-        eventDataAccess.save(event);
-
-        EditEventOutputData editEventOutputData = new EditEventOutputData(
+        // Make a new event with updated information
+        Event updated = new Event(
                 event.getId(),
-                event.getTitle(),
-                event.getStart(),
-                event.getEnd(),
-                event.getLocation(),
-                event.getCategory(),
-                event.getReminder()
+                newTitle,
+                newStart,
+                newEnd,
+                newLocation,
+                newCategory,
+                newReminder
         );
-        editEventPresenter.prepareSuccessView(editEventOutputData);
+
+        // Save updated event via DAO
+        eventMethodsDataAccess.save(updated);
+
+        // build output data from updatedEvent
+        EditEventOutputData outputData = new EditEventOutputData(
+                updated.getId(),
+                updated.getTitle(),
+                updated.getStart(),
+                updated.getEnd(),
+                updated.getLocation(),
+                updated.getCategory(),
+                updated.getReminderMessage()
+        );
+
+        editEventPresenter.prepareSuccessView(outputData);
     }
 
 }
