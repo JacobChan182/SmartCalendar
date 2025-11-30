@@ -43,92 +43,101 @@
 
     <right>
         <VBox spacing="8" styleClass="sidebar">
-            <Label text = "New Event"/>
-            <TextField fx:id = "titleField" promptText="Title"/>
-            <TextField fx:id = "locationField" promptText="Location"/>
-            <DatePicker fx:id = "datePicker"/>
-            <HBox spacing = "4">
-                    <TextField fx:id = "startField" promptText="Start (HH:mm)"/>
-                    <TextField fx:id = "endField" promptText="End (HH:mm)"/>
+
+            <!-- ========= Day details ========= -->
+            <Label fx:id="dayDetailsLabel"
+                   id="dayDetailsLabel"
+                   text="Day details"/>
+
+            <ListView fx:id="dayEvents"/>
+
+            <!-- Edit / Delete buttons under Day details -->
+            <HBox spacing="8">
+                <Button text="Edit"
+                        onAction="#editEvent"/>
+                <Button text="Delete"
+                        onAction="#deleteEvent"/>
             </HBox>
 
-            <Label text="Category"/>
-            <ComboBox fx:id = "categoryCombo" prefWidth="150"/>
-            <Button text = "Add" onAction="#addEvent"/>
-
-            <Label text="Day details"/>
-            <ListView fx:id="dayEvents"/>
-            <HBox spacing = "8">
-                <Button text="Edit" onAction="#updateEvent"/>
-                <Button text = "Delete" onAction = "#deleteEvent"/>
-
-            </HBox>
-            <!-- ========= 原来的 Day details 区域 ========= -->
-            <Label text="Day details"/>
-            <ListView fx:id="dayEvents"/>
-            
             <Separator/>
-            
-            <Label text="Color Suggestions"/>
+            <!-- ========= Color Suggestions ========= -->
+            <Label fx:id="colorSuggestionsLabel"
+                   id="colorSuggestionsLabel"
+                   text="Color Suggestions"/>
+
+            <!-- Color picker row: user clicks to pick a base color -->
             <HBox spacing="4" alignment="CENTER_LEFT">
-                <ColorPicker fx:id="colorPicker" onAction="#onColorPicked"/>
-                <Label text="Pick a color" styleClass="color-picker-label"/>
+                <ColorPicker fx:id="colorPicker"
+                             onAction="#onColorPicked"/>
             </HBox>
-            <Label fx:id="colorErrorLabel" styleClass="error-label" visible="false"/>
-            
+
+            <!-- error label for color suggestion -->
+            <Label fx:id="colorErrorLabel"
+                   styleClass="error-label"
+                   visible="false"/>
+
+            <!-- containers for each color scheme type -->
             <VBox spacing="4" fx:id="colorSchemesContainer">
-                <VBox spacing="2" fx:id="monochromaticContainer">
+
+                <VBox spacing="2">
                     <Label text="Monochromatic" styleClass="scheme-label"/>
                     <HBox spacing="4" fx:id="monochromaticColors" alignment="CENTER_LEFT"/>
                 </VBox>
-                <VBox spacing="2" fx:id="analogousContainer">
+
+                <VBox spacing="2">
                     <Label text="Analogous" styleClass="scheme-label"/>
                     <HBox spacing="4" fx:id="analogousColors" alignment="CENTER_LEFT"/>
                 </VBox>
-                <VBox spacing="2" fx:id="complementaryContainer">
+
+                <VBox spacing="2">
                     <Label text="Complementary" styleClass="scheme-label"/>
                     <HBox spacing="4" fx:id="complementaryColors" alignment="CENTER_LEFT"/>
                 </VBox>
-                <VBox spacing="2" fx:id="neutralContainer">
+
+                <VBox spacing="2">
                     <Label text="Neutral" styleClass="scheme-label"/>
                     <HBox spacing="4" fx:id="neutralColors" alignment="CENTER_LEFT"/>
                 </VBox>
+
             </VBox>
 
-            <!-- 分割线：下面是天气区域 -->
+
             <Separator/>
 
-            <!-- ========= Weather 区域（和 MainController 字段一一对应） ========= -->
-            <Label text="Weather"/>
+            <!-- ========= Weather ========= -->
+            <Label text="Weather" styleClass="section-title"/>
 
-            <!-- 城市 + 国家 输入行 -->
-            <HBox spacing="4">
-                <!-- 对应 @FXML private TextField cityField; -->
+            <!-- city / country input row -->
+            <HBox spacing="4" alignment="CENTER_LEFT">
+                <!-- cityField: e.g. "Toronto" -->
                 <TextField fx:id="cityField"
                            promptText="City (e.g. Toronto)"
-                           HBox.hgrow="ALWAYS"/>
+                           prefWidth="120"/>
 
-                <!-- 对应 @FXML private TextField countryField; -->
+                <!-- countryField: e.g. "Canada" / "CA" -->
                 <TextField fx:id="countryField"
                            promptText="Country / Code (e.g. Canada or CA)"
                            prefWidth="80"/>
             </HBox>
 
-            <!-- 点击触发 onWeatherSearchClicked() -->
+            <!-- button triggers onWeatherSearchClicked() -->
             <Button text="Get weather"
                     onAction="#onWeatherSearchClicked"/>
 
-            <!-- 错误信息标签，对应 weatherErrorLabel -->
+            <!-- error label, bound to weatherErrorLabel -->
             <Label fx:id="weatherErrorLabel"
                    styleClass="weather-error"/>
 
-            <!-- 天气结果标签，对应 MainController 里的 4 个 Label -->
+            <!-- weather result labels -->
             <Label fx:id="weatherLocationLabel"/>
             <Label fx:id="weatherCurrentLabel"/>
             <Label fx:id="weatherRangeLabel"/>
             <Label fx:id="weatherConditionLabel"/>
+
         </VBox>
     </right>
+
+
 
 
 
