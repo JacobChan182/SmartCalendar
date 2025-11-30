@@ -308,27 +308,112 @@ public class MainController implements PropertyChangeListener {
 
     @FXML
     public void editEvent() {
+        // 1. Get the currently selected event in the day list
         Event event = dayEvents.getSelectionModel().getSelectedItem();
-        if (event != null) {
-            TextInputDialog dialog = new TextInputDialog(event.getTitle());
-            dialog.setHeaderText("Edit");
-            dialog.setContentText("Title");
-            dialog.showAndWait().ifPresent(newTitle -> {
-                Event updated = new Event(
-                        event.getId(),
-                        newTitle,
-                        event.getStart(),
-                        event.getEnd(),
-                        event.getLocation(),
-                        event.getCategory(),
-                        event.getReminderMessage()
-                );
-                eventEdit.editEvent(event.getId(), updated);
-                refreshDayDetails();
-                renderMonth();
-            });
+        if (event == null) {
+            // No event selected, nothing to edit
+            return;
         }
+
+        // 2. Create a dialog window for editing the selected event
+        Dialog<Event> dialog = new Dialog<>();
+        dialog.setTitle("Edit Event - " + event.getStart().toLocalDate());
+
+        // Attach the dialog to the main window
+        if (lblYearMonth != null && lblYearMonth.getScene() != null) {
+            dialog.initOwner(lblYearMonth.getScene().getWindow());
+        }
+
+        DialogPane pane = dialog.getDialogPane();
+
+        // Use the same stylesheet as the main window
+        pane.getStylesheets().add(
+                getClass().getResource("style.css").toExternalForm()
+        );
+        // Optional: extra style class for dialog-specific tweaks
+        pane.getStyleClass().add("dialog-pane");
+
+        // Dialog buttons (English)
+        ButtonType saveButton   = new ButtonType("Save",   ButtonBar.ButtonData.OK_DONE);
+        ButtonType cancelButton = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+        pane.getButtonTypes().setAll(saveButton, cancelButton);
+
+        // 3. Form controls inside the dialog, pre-filled with the existing event values
+        TextField titleField     = new TextField(event.getTitle());
+        TextField locationField  = new TextField(event.getLocation());
+        DatePicker datePicker    = new DatePicker(event.getStart().toLocalDate());
+        TextField startField     = new TextField(event.getStart().toLocalTime().toString());
+        TextField endField       = new TextField(event.getEnd().toLocalTime().toString());
+
+        ComboBox<Event.CategoryType> categoryBox = new ComboBox<>();
+        categoryBox.getItems().setAll(Event.CategoryType.values());
+        categoryBox.setValue(event.getCategory());
+
+        // 4. Layout inside the dialog (similar to the “new event” dialog)
+        GridPane grid = new GridPane();
+        grid.setHgap(8);
+        grid.setVgap(6);
+
+        int row = 0;
+        grid.add(new Label("Title:"),          0, row);
+        grid.add(titleField,                   1, row++);
+
+        grid.add(new Label("Location:"),       0, row);
+        grid.add(locationField,                1, row++);
+
+        grid.add(new Label("Date:"),           0, row);
+        grid.add(datePicker,                   1, row++);
+
+        grid.add(new Label("Start (HH:mm):"),  0, row);
+        grid.add(startField,                   1, row++);
+
+        grid.add(new Label("End (HH:mm):"),    0, row);
+        grid.add(endField,                     1, row++);
+
+        grid.add(new Label("Category:"),       0, row);
+        grid.add(categoryBox,                  1, row++);
+
+        pane.setContent(grid);
+
+        // 5. When the user clicks “Save”, try to build an updated Event
+        dialog.setResultConverter(button -> {
+            if (button == saveButton) {
+                try {
+                    String title      = titleField.getText();
+                    String location   = locationField.getText();
+                    LocalDate date    = datePicker.getValue();
+                    LocalTime start   = LocalTime.parse(startField.getText());
+                    LocalTime end     = LocalTime.parse(endField.getText());
+                    Event.CategoryType category = categoryBox.getValue();
+
+                    return new Event(
+                            event.getId(),   // keep the original id
+                            title,
+                            LocalDateTime.of(date, start),
+                            LocalDateTime.of(date, end),
+                            location,
+                            category,
+                            event.getReminderMessage() // keep the original reminder
+                    );
+                } catch (Exception ex) {
+                    // Parsing failed or invalid input: keep the dialog open
+                    ex.printStackTrace();
+                    return null;
+                }
+            }
+            return null;
+        });
+
+        // 6. If we got an updated event, call the use case and refresh the UI
+        Optional<Event> result = dialog.showAndWait();
+        result.ifPresent(updated -> {
+            eventEdit.editEvent(event.getId(), updated);
+            refreshDayDetails();
+            renderMonth();
+        });
     }
+
+
 
     @FXML
     public void deleteEvent() {
