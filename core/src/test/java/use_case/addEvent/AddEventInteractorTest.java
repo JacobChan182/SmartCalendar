@@ -126,7 +126,7 @@ public class AddEventInteractorTest {
                     LocalDateTime.of(2025,12,10,12,0),
                     "EX100",
                     Event.CategoryType.MEETING,
-                    "Exame for CS258");
+                    "Exam for CS258");
 
             interactor.addEvent(new AddEventInputData(event1.getId(),
                     event1.getTitle(),
@@ -170,6 +170,8 @@ public class AddEventInteractorTest {
             assertTrue(foundEvent2);
         }
 
+
+
         @Test
         void TestAddEndBeforeStart() {
             TestPresenter testPresenter = new TestPresenter();
@@ -196,6 +198,121 @@ public class AddEventInteractorTest {
 
             assertFalse(testPresenter.lastOutput.getSuccess());
             assertEquals("End time cannot be before start time", testPresenter.lastOutput.getMessage());
+        }
+
+        @Test
+        void TestSameLocationTimeOverlap() {
+            TestRepo testRepo = new TestRepo();
+            TestPresenter testPresenter = new TestPresenter();
+            AddEventInteractor interactor = new AddEventInteractor(testRepo, testPresenter);
+
+            Event existing = new Event(
+                    UUID.randomUUID(),
+                    "Meeting 1",
+                    LocalDateTime.of(2025, 12, 10, 10, 0),
+                    LocalDateTime.of(2025, 12, 10, 11, 0),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null
+            );
+
+            testRepo.save(existing);
+
+            Event newEvent = new Event(
+                    UUID.randomUUID(),
+                    "Meeting 2",
+                    LocalDateTime.of(2025, 12, 10, 10, 30),
+                    LocalDateTime.of(2025, 12, 10, 11, 30),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null
+            );
+
+            interactor.addEvent(new AddEventInputData(
+                    newEvent.getId(),
+                    newEvent.getTitle(),
+                    newEvent.getStart(),
+                    newEvent.getEnd(),
+                    newEvent.getLocation(),
+                    newEvent.getCategory(),
+                    newEvent.getReminderMessage()
+            ));
+
+            assertFalse(testPresenter.lastOutput.getSuccess());
+            assertEquals("Conflict: overlapping events", testPresenter.lastOutput.getMessage());
+        }
+
+        @Test
+        void testEventEndsBeforeExistingStarts() {
+            TestRepo testRepo = new TestRepo();
+            TestPresenter testPresenter = new TestPresenter();
+            AddEventInteractor interactor = new AddEventInteractor(testRepo, testPresenter);
+
+            Event existing = new Event(UUID.randomUUID(),
+                    "Meeting 1",
+                    LocalDateTime.of(2025, 12, 10, 14, 0),
+                    LocalDateTime.of(2025, 12, 10, 15, 0),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null);
+            testRepo.save(existing);
+
+            Event newEvent = new Event(UUID.randomUUID(),
+                    "Meeting 2",
+                    LocalDateTime.of(2025, 12, 10, 10, 0),
+                    LocalDateTime.of(2025, 12, 10, 11, 0),  // Ends before existing starts
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null);
+
+            interactor.addEvent(new AddEventInputData(
+                    newEvent.getId(),
+                    newEvent.getTitle(),
+                    newEvent.getStart(),
+                    newEvent.getEnd(),
+                    newEvent.getLocation(),
+                    newEvent.getCategory(),
+                    newEvent.getReminderMessage()));
+
+            assertTrue(testPresenter.lastOutput.getSuccess());
+            assertEquals(2, testRepo.getEventsForDay(LocalDate.of(2025, 12, 10)).size());
+        }
+
+        @Test
+        void testEventStartsAfterExistingEnds() {
+
+            TestRepo testRepo = new TestRepo();
+            TestPresenter testPresenter = new TestPresenter();
+            AddEventInteractor interactor = new AddEventInteractor(testRepo, testPresenter);
+
+            Event existing = new Event(UUID.randomUUID(),
+                    "Meeting 1",
+                    LocalDateTime.of(2025, 12, 10, 10, 0),
+                    LocalDateTime.of(2025, 12, 10, 11, 0),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null);
+            testRepo.save(existing);
+
+            Event newEvent = new Event(UUID.randomUUID(),
+                    "Meeting 2",
+                    LocalDateTime.of(2025, 12, 10, 12, 0),
+                    LocalDateTime.of(2025, 12, 10, 13, 0),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    null);
+
+            interactor.addEvent(new AddEventInputData(
+                    newEvent.getId(),
+                    newEvent.getTitle(),
+                    newEvent.getStart(),
+                    newEvent.getEnd(),
+                    newEvent.getLocation(),
+                    newEvent.getCategory(),
+                    newEvent.getReminderMessage()));
+
+            assertTrue(testPresenter.lastOutput.getSuccess());
+            assertEquals(2, testRepo.getEventsForDay(LocalDate.of(2025, 12, 10)).size());
         }
     }
 }
