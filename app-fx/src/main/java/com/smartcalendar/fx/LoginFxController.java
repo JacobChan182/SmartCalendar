@@ -34,6 +34,7 @@ public class LoginFxController {
 
     // Primary stage is injected from App so we can switch scenes
     private Stage primaryStage;
+    private String currentUsername;
 
     public void setPrimaryStage(Stage stage) {
         this.primaryStage = stage;
@@ -79,6 +80,7 @@ public class LoginFxController {
     private void onLoginClicked() {
         String username = usernameField.getText();
         String password = passwordField.getText();
+        this.currentUsername = username;
         errorLabel.setText("");
         loginController.execute(username, password);
     }
@@ -112,6 +114,8 @@ public class LoginFxController {
             FXMLLoader loader =
                     new FXMLLoader(getClass().getResource("MainView.fxml"));
             Parent root = loader.load();
+            MainController mainController = loader.getController();
+            mainController.setCurrentUser(currentUsername);
 
             Scene scene = new Scene(root, 1280, 900);
             primaryStage.setScene(scene);

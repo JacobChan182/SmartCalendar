@@ -3,6 +3,7 @@ package com.smartcalendar.fx;
 import entity.Event;
 
 import data_access.ColorApiDataAccessObject;
+import data_access.SQLiteEventDataAccessObject;
 import interface_adapter.color_scheme.ColorSchemeController;
 import interface_adapter.color_scheme.ColorSchemePresenter;
 import interface_adapter.color_scheme.ColorSchemeState;
@@ -58,7 +59,12 @@ public class MainController implements PropertyChangeListener {
     private YearMonth current = YearMonth.now();
     private LocalDate selected = LocalDate.now();
 
-    private final EventEdit eventEdit = new EventEdit();
+    // DAO for persisting events per user
+    private final SQLiteEventDataAccessObject eventDao = new SQLiteEventDataAccessObject();
+
+    // The username of the currently logged-in user
+    private String currentUsername;
+
     // Color scheme components
     private ColorSchemeViewModel colorSchemeViewModel;
     private ColorSchemeController colorSchemeController;
@@ -130,6 +136,14 @@ public class MainController implements PropertyChangeListener {
     // Initialize color scheme feature
         initializeColorScheme();
 
+    }
+
+    public void setCurrentUser(String username) {
+        this.currentUsername = username;
+
+        // Once we know who the user is, refresh the calendar view for this user
+        refreshDayDetails();
+        renderMonth();
     }
 
 
@@ -283,6 +297,11 @@ public class MainController implements PropertyChangeListener {
 
     public void addEvent() {
         try {
+            if (currentUsername == null) {
+                System.err.println("No current user set; cannot add event.");
+                return;
+            }
+
             String title = titleField.getText();
             String location = locationField.getText();
             LocalDate date = datePicker.getValue();
@@ -300,11 +319,16 @@ public class MainController implements PropertyChangeListener {
                     null
             );
 
-            eventEdit.addEvent(event);
+            // Persist to SQLite for this user
+            eventDao.saveEvent(currentUsername, event);
+
             refreshDayDetails();
             renderMonth();
-        } catch (Exception ex) {System.err.println("Failed to add event" + ex.getMessage());}
+        } catch (Exception ex) {
+            System.err.println("Failed to add event: " + ex.getMessage());
+        }
     }
+
 
     @FXML
     public void editEvent() {
@@ -407,25 +431,41 @@ public class MainController implements PropertyChangeListener {
         // 6. If we got an updated event, call the use case and refresh the UI
         Optional<Event> result = dialog.showAndWait();
         result.ifPresent(updated -> {
-            eventEdit.editEvent(event.getId(), updated);
+            if (currentUsername == null) {
+                System.err.println("No current user set; cannot edit event.");
+                return;
+            }
+            eventDao.saveEvent(currentUsername, updated);
             refreshDayDetails();
             renderMonth();
         });
+
     }
 
 
 
     @FXML
     public void deleteEvent() {
+        if (currentUsername == null) {
+            System.err.println("No current user set; cannot delete event.");
+            return;
+        }
+
         Event event = dayEvents.getSelectionModel().getSelectedItem();
         if (event != null) {
-            eventEdit.deleteEvent(event.getId());
-            refreshDayDetails();;
+            eventDao.deleteEvent(currentUsername, event.getId());
+            refreshDayDetails();
             renderMonth();
         }
     }
 
+
     public void updateEvent() {
+        if (currentUsername == null) {
+            System.err.println("No current user set; cannot update event.");
+            return;
+        }
+
         Event eventSelect = dayEvents.getSelectionModel().getSelectedItem();
         if (eventSelect != null) {
             Event updated = new Event(
@@ -437,11 +477,12 @@ public class MainController implements PropertyChangeListener {
                     categoryCombo.getValue(),
                     eventSelect.getReminderMessage()
             );
-            eventEdit.editEvent(eventSelect.getId(), updated);
+            eventDao.saveEvent(currentUsername, updated);
             refreshDayDetails();
             renderMonth();
         }
     }
+
 
     /** Create a single day cell. */
     private Node makeDayCell(LocalDate date) {
@@ -498,7 +539,11 @@ public class MainController implements PropertyChangeListener {
     }
 
     private List<Event> getEventsFor(LocalDate date) {
-        return eventEdit.getEventsForDay(date);
+        // Before login / username set, show no events
+        if (currentUsername == null) {
+            return new ArrayList<>();
+        }
+        return eventDao.getEventsForDay(currentUsername, date);
     }
 
 
@@ -623,12 +668,15 @@ public class MainController implements PropertyChangeListener {
         });
 
         Optional<Event> result = dialog.showAndWait();
-        if (result.isPresent()) {
-            Event event = result.get();
-            eventEdit.addEvent(event);
+        result.ifPresent(updated -> {
+            if (currentUsername == null) {
+                System.err.println("No current user set; cannot edit event.");
+                return;
+            }
+            eventDao.saveEvent(currentUsername, updated);
             refreshDayDetails();
             renderMonth();
-        }
+        });
     }
 
 

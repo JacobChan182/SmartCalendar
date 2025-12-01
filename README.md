@@ -281,8 +281,8 @@ mvn -pl app-fx -am javafx:run
 - [x] Event deletion workflow
 - [x] Color suggestions with ColorPicker + external API
 - [x] Weather assistant for user-typed city/country
-- [ ] Persistent event storage (JSON/SQLite)
-- [ ] General UX polish and bug fixing
+- [x] Persistent event storage (JSON/SQLite)
+- [x] General UX polish and bug fixing
 
 ---
 
