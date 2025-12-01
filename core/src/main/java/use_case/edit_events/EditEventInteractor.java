@@ -71,7 +71,7 @@ public class EditEventInteractor implements EditEventInputBoundary {
         }
 
         // ===== 6. Reminder (unchanged) =====
-        // 我们不编辑 reminder，只保留原来的值
+        // we do not edit reminder，only keeps the original value
         String reminderMessage = event.getReminderMessage();
 
         // ===== 7. Create updated Event (no setters on Event) =====
@@ -96,7 +96,7 @@ public class EditEventInteractor implements EditEventInputBoundary {
                 updatedEvent.getEnd(),
                 updatedEvent.getLocation(),
                 updatedEvent.getCategory(),
-                updatedEvent.getReminderMessage()   // 只是回传，不支持修改
+                updatedEvent.getReminderMessage()   // Just sending them back
         );
 
         presenter.prepareSuccessView(output);
