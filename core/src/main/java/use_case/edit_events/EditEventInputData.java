@@ -48,5 +48,5 @@ public class EditEventInputData {
 
     public Event.CategoryType getCategory() { return category; }
 
-    public String getReminder() { return reminderMessage; }
+    public String getReminderMessage() { return reminderMessage; }
 }
