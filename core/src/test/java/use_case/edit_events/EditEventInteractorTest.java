@@ -4,191 +4,277 @@ import entity.Event;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Tests for EditEventInteractor.
- * Goal: cover all branches in EditEventInteractor to achieve 100% line coverage.
- */
-class EditEventInteractorTest {
-
-    /**
-     * Simple DAO stub for tests.
-     * It does not talk to the real database; it only stores one Event in memory.
-     */
-    private static class EditEventDaoStub implements EditEventEventDataAccessInterface {
-
-        Event storedEvent;
-
-        EditEventDaoStub(Event initialEvent) {
-            this.storedEvent = initialEvent;
-        }
+public class EditEventInteractorTest {
+    private static class InMemoryEditDataAccessObject implements EditEventEventDataAccessInterface {
+        private final Map<UUID, Event> events = new HashMap<>();
 
         @Override
         public Event get(UUID id) {
-            if (storedEvent != null && storedEvent.getId().equals(id)) {
-                return storedEvent;
-            }
-            return null;
+            return events.get(id);
         }
 
         @Override
         public void save(Event event) {
-            this.storedEvent = event;
+            events.put(event.getId(), event);
         }
 
         @Override
         public boolean exists(UUID id) {
-            return storedEvent != null && storedEvent.getId().equals(id);
+            return events.containsKey(id);
         }
     }
 
-    /**
-     * Presenter stub for tests.
-     * It only records how prepareSuccessView / prepareFailView are called.
-     */
-    private static class EditEventPresenterStub implements EditEventOutputBoundary {
-
-        EditEventOutputData lastResponse;
-        String lastError;
-        boolean successCalled = false;
-        boolean failCalled = false;
+    private static class CapturingPresenter implements EditEventOutputBoundary {
+        EditEventOutputData successData;
+        String failMessage;
 
         @Override
         public void prepareSuccessView(EditEventOutputData outputData) {
-            successCalled = true;
-            lastResponse = outputData;
+            this.successData = outputData;
         }
 
         @Override
-        public void prepareFailView(String errorMessage) {
-            failCalled = true;
-            lastError = errorMessage;
+        public void prepareFailView(String error) {
+            this.failMessage = error;
         }
     }
 
+    // Update the title, location, and the category
     @Test
-    void successWhenEventExistsAndTimesAreValid() {
-        // Arrange
+    void successTest() {
         UUID id = UUID.randomUUID();
+        LocalDateTime originalStart = LocalDateTime.now();
+        LocalDateTime originalEnd = originalStart.plusHours(1);
 
-        Event original = new Event(
-                id,
-                "Old title",
-                LocalDateTime.of(2025, 12, 1, 9, 0),
-                LocalDateTime.of(2025, 12, 1, 10, 0),
-                "Old location",
-                Event.CategoryType.BUSINESS,
-                "Old reminder"
+        Event originalEvent = new Event(
+                id, "Original Title", originalStart, originalEnd,
+                "Toronto", Event.CategoryType.WORK, "Don't forget"
         );
 
-        EditEventDaoStub dao = new EditEventDaoStub(original);
-        EditEventPresenterStub presenter = new EditEventPresenterStub();
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+        inMemoryEditDataAccessObject.save(originalEvent);
 
-        EditEventInteractor interactor = new EditEventInteractor(dao, presenter);
-
-        // In this test we pass null for most fields so that the "keep original value"
-        // branches are exercised, but the edit still succeeds.
-        EditEventInputData input = new EditEventInputData(
-                id,
-                null,                            // keep old title
-                null,                            // keep old start
-                null,                            // keep old end
-                null,                            // keep old location
-                null,                            // keep old category
-                null                             // keep old reminder
+        EditEventInputData inputData = new EditEventInputData(
+                id, "Updated Title", originalStart, originalEnd,
+                "Mississauga", Event.CategoryType.GYM, null
         );
 
-        // Act
-        interactor.execute(input);
+        EditEventOutputBoundary successPresenter = new EditEventOutputBoundary() {
+            @Override
+            public void prepareSuccessView(EditEventOutputData outputData) {
+                assertEquals("Updated Title", outputData.getTitle());
+                assertEquals("Mississauga", outputData.getLocation());
+                assertEquals(Event.CategoryType.GYM, outputData.getCategory());
+                assertEquals(id, outputData.getId());
+            }
 
-        // Assert
-        assertTrue(presenter.successCalled);
-        assertFalse(presenter.failCalled);
-        assertNotNull(presenter.lastResponse);
+            @Override
+            public void prepareFailView(String errorMessage) {
+                fail("Use case failure is unexpected");
+            }
+        };
+        EditEventInteractor editEventInteractor = new EditEventInteractor(inMemoryEditDataAccessObject, successPresenter);
 
-        // The stored event should still exist and keep all original fields.
-        assertEquals("Old title", dao.storedEvent.getTitle());
-        assertEquals("Old location", dao.storedEvent.getLocation());
-        assertEquals(Event.CategoryType.BUSINESS, dao.storedEvent.getCategory());
-        assertEquals("Old reminder", dao.storedEvent.getReminderMessage());
+        editEventInteractor.execute(inputData);
+
+        Event storedEvent = inMemoryEditDataAccessObject.get(id);
+        assertEquals("Updated Title", storedEvent.getTitle());
+        assertEquals("Mississauga", storedEvent.getLocation());
     }
 
+    // Update the title
     @Test
-    void failWhenEventDoesNotExist() {
-        // Arrange
+    void successPartialUpdateTest() {
         UUID id = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.of(2025,12,1,10,0);
+        LocalDateTime end = LocalDateTime.of(2025,12,1,10,30);
 
-        // DAO has no event stored: get(id) will return null.
-        EditEventDaoStub dao = new EditEventDaoStub(null);
-        EditEventPresenterStub presenter = new EditEventPresenterStub();
-        EditEventInteractor interactor = new EditEventInteractor(dao, presenter);
+        Event originalEvent = new Event(
+                id, "Original Title", start, end,
+                "Toronto", Event.CategoryType.CASUAL, "Reminder"
+        );
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+        inMemoryEditDataAccessObject.save(originalEvent);
 
-        EditEventInputData input = new EditEventInputData(
-                id,
-                "Whatever",
-                LocalDateTime.of(2025, 12, 1, 9, 0),
-                LocalDateTime.of(2025, 12, 1, 10, 0),
-                "Somewhere",
-                Event.CategoryType.BUSINESS,
-                "Reminder"
+        EditEventInputData inputData = new EditEventInputData(
+                id, "Updated Title", null, null, null, null, null
         );
 
-        // Act
-        interactor.execute(input);
+        EditEventOutputBoundary successPresenter = new EditEventOutputBoundary() {
+            @Override
+            public void prepareSuccessView(EditEventOutputData outputData) {
+                assertEquals("Updated Title", outputData.getTitle());
+                assertEquals("Toronto", outputData.getLocation());
+                assertEquals(start, outputData.getStart());
+                assertEquals(end, outputData.getEnd());
+                assertEquals(Event.CategoryType.CASUAL, outputData.getCategory());
+                assertEquals("Reminder", outputData.getReminderMessage());
+            }
+            @Override
+            public void prepareFailView(String errorMessage) {
+                fail("Use case failure is unexpected");
+            }
+        };
 
-        // Assert
-        assertFalse(presenter.successCalled);
-        assertTrue(presenter.failCalled);
-        // This message comes directly from your EditEventInteractor
-        assertEquals("Event does not exist.", presenter.lastError);
-        assertNull(dao.storedEvent);
+        EditEventInteractor editEventInteractor = new EditEventInteractor(inMemoryEditDataAccessObject, successPresenter);
+        editEventInteractor.execute(inputData);
     }
 
+    // Update location and reminder keeping the title
     @Test
-    void failWhenEndTimeBeforeStartTime() {
+    void successNoTitleChangeTest() {
         // Arrange
         UUID id = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusHours(1);
 
-        Event original = new Event(
-                id,
-                "Original",
-                LocalDateTime.of(2025, 12, 1, 9, 0),
-                LocalDateTime.of(2025, 12, 1, 10, 0),
-                "Original location",
-                Event.CategoryType.BUSINESS,
-                "Original reminder"
+        Event originalEvent = new Event(
+                id, "Keep This Title", start, end,
+                "Toronto", Event.CategoryType.CASUAL, "Reminder");
+
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+        inMemoryEditDataAccessObject.save(originalEvent);
+
+        EditEventInputData inputData = new EditEventInputData(
+                id, null, null, null, "Mississauga", null, "Reminder2"
         );
 
-        EditEventDaoStub dao = new EditEventDaoStub(original);
-        EditEventPresenterStub presenter = new EditEventPresenterStub();
-        EditEventInteractor interactor = new EditEventInteractor(dao, presenter);
+        CapturingPresenter presenter = new CapturingPresenter();
+        EditEventInteractor interactor = new EditEventInteractor(inMemoryEditDataAccessObject, presenter);
 
-        // End time is before start time: should hit the validation failure branch.
-        EditEventInputData input = new EditEventInputData(
-                id,
-                "New title",
-                LocalDateTime.of(2025, 12, 1, 11, 0),
-                LocalDateTime.of(2025, 12, 1, 10, 0),   // end < start
-                "New location",
-                Event.CategoryType.GYM,
-                "New reminder"
-        );
-
-        // Act
-        interactor.execute(input);
+        interactor.execute(inputData);
 
         // Assert
-        assertFalse(presenter.successCalled);
-        assertTrue(presenter.failCalled);
-        assertEquals("End time cannot be before start time.", presenter.lastError);
+        assertNotNull(presenter.successData);
+        assertEquals("Keep This Title", presenter.successData.getTitle(), "Title should remain unchanged when input is null");
+        assertEquals("Mississauga", presenter.successData.getLocation(), "Location should be updated");
+        assertEquals("Reminder2", presenter.successData.getReminderMessage(), "Reminder should be updated");
+    }
 
-        // The original event should not be modified when the edit fails.
-        assertEquals("Original", dao.storedEvent.getTitle());
-        assertEquals("Original location", dao.storedEvent.getLocation());
-        assertEquals(Event.CategoryType.BUSINESS, dao.storedEvent.getCategory());
-        assertEquals("Original reminder", dao.storedEvent.getReminderMessage());
+    // The event id does not exist
+    @Test
+    void failureEventNotFoundTest() {
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+
+        EditEventInputData inputData = new EditEventInputData(
+                UUID.randomUUID(), "Title", null, null, null, null, null
+        );
+
+        CapturingPresenter presenter = new CapturingPresenter();
+        EditEventInteractor interactor = new EditEventInteractor(inMemoryEditDataAccessObject, presenter);
+
+        interactor.execute(inputData);
+
+        assertNull(presenter.successData);
+        assertEquals("Event does not exist.", presenter.failMessage);
+    }
+
+    // Changes the start time to after the end time
+    @Test
+    void failureEndTimeBeforeStartTimeTest() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.of(2025,12,1,10,0);
+        LocalDateTime end = LocalDateTime.of(2025,12,1,10,30);
+
+        Event originalEvent = new Event(
+                id, "Title", start, end, "Toronto",  Event.CategoryType.WORK, "Don't forget"
+        );
+
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+        inMemoryEditDataAccessObject.save(originalEvent);
+
+        LocalDateTime newStart = LocalDateTime.of(2025,12,1,11,0);
+
+        EditEventInputData inputData = new EditEventInputData(
+                id, null, newStart, null, null, null, null
+        );
+
+        CapturingPresenter presenter = new CapturingPresenter();
+        EditEventInteractor editEventInteractor = new EditEventInteractor(inMemoryEditDataAccessObject, presenter);
+
+        editEventInteractor.execute(inputData);
+
+        if (presenter.successData != null) {
+            fail("Expected failure but got success.\n" +
+                    "Updated Start: " + presenter.successData.getStart() + "\n" +
+                    "Updated End:   " + presenter.successData.getEnd());
+        }
+
+        assertNotNull(presenter.failMessage, "Expected a failure message");
+        assertEquals("End time cannot be before start time.", presenter.failMessage);
+    }
+
+    // Changes the end time to before the start time
+    @Test
+    void failureEndTimeBeforeStartTimeTest2() {
+        UUID id = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.of(2025,12,1,10,0);
+        LocalDateTime end = LocalDateTime.of(2025,12,1,10,30);
+
+        Event originalEvent = new Event(
+                id, "Title", start, end, "Toronto",  Event.CategoryType.WORK, "Don't forget"
+        );
+
+        InMemoryEditDataAccessObject inMemoryEditDataAccessObject = new InMemoryEditDataAccessObject();
+        inMemoryEditDataAccessObject.save(originalEvent);
+
+        LocalDateTime newEnd = LocalDateTime.of(2025,12,1,9,0);
+
+        EditEventInputData inputData = new EditEventInputData(
+                id, null, null, newEnd, null, null, null
+        );
+
+        CapturingPresenter presenter = new CapturingPresenter();
+        EditEventInteractor editEventInteractor = new EditEventInteractor(inMemoryEditDataAccessObject, presenter);
+
+        editEventInteractor.execute(inputData);
+
+        if (presenter.successData != null) {
+            fail("Expected failure but got success.\n" +
+                    "Updated Start: " + presenter.successData.getStart() + "\n" +
+                    "Updated End:   " + presenter.successData.getEnd());
+        }
+
+        assertNotNull(presenter.failMessage, "Expected a failure message");
+        assertEquals("End time cannot be before start time.", presenter.failMessage);
+    }
+
+    // Test empty strings ("") which should be treated like null
+    @Test
+    void successEmptyStringsTest() {
+        // Arrange
+        UUID id = UUID.randomUUID();
+        LocalDateTime start = LocalDateTime.now();
+        LocalDateTime end = start.plusHours(1);
+
+        Event originalEvent = new Event(
+                id, "Keep This Title", start, end,
+                "Keep This Location", Event.CategoryType.CASUAL, "Reminder");
+
+        InMemoryEditDataAccessObject repository = new InMemoryEditDataAccessObject();
+        repository.save(originalEvent);
+
+        // Act: Pass empty strings "" for title and location
+        EditEventInputData inputData = new EditEventInputData(
+                id, "", null, null, "   ",null, null
+        );
+
+        CapturingPresenter presenter = new CapturingPresenter();
+        EditEventInteractor interactor = new EditEventInteractor(repository, presenter);
+
+        interactor.execute(inputData);
+
+        // Assert
+        assertNotNull(presenter.successData);
+        // Should keep original title because input was blank
+        assertEquals("Keep This Title", presenter.successData.getTitle());
+        // Should keep original location because input was blank
+        assertEquals("Keep This Location", presenter.successData.getLocation());
     }
 }

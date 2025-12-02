@@ -70,9 +70,11 @@ public class EditEventInteractor implements EditEventInputBoundary {
             newCategory = event.getCategory();
         }
 
-        // ===== 6. Reminder (unchanged) =====
-        // we do not edit reminder，only keeps the original value
-        String reminderMessage = event.getReminderMessage();
+        // ===== 6. Reminder ====
+        String newReminderMessage = inputData.getReminderMessage();
+        if (newReminderMessage == null) {
+            newReminderMessage = event.getReminderMessage();
+        }
 
         // ===== 7. Create updated Event (no setters on Event) =====
         Event updatedEvent = new Event(
@@ -82,7 +84,7 @@ public class EditEventInteractor implements EditEventInputBoundary {
                 newEnd,
                 newLocation,
                 newCategory,
-                reminderMessage
+                newReminderMessage
         );
 
         // Save via data access
@@ -96,7 +98,7 @@ public class EditEventInteractor implements EditEventInputBoundary {
                 updatedEvent.getEnd(),
                 updatedEvent.getLocation(),
                 updatedEvent.getCategory(),
-                updatedEvent.getReminderMessage()   // Just sending them back
+                updatedEvent.getReminderMessage()
         );
 
         presenter.prepareSuccessView(output);
