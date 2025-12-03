@@ -314,5 +314,53 @@ public class AddEventInteractorTest {
             assertTrue(testPresenter.lastOutput.getSuccess());
             assertEquals(2, testRepo.getEventsForDay(LocalDate.of(2025, 12, 10)).size());
         }
+
+        @Test
+        void testAddEventInputDataGetters() {
+            UUID id = UUID.randomUUID();
+            LocalDateTime start = LocalDateTime.of(2025, 1, 1, 9, 0);
+            LocalDateTime end = LocalDateTime.of(2025, 1, 1, 10, 0);
+
+            AddEventInputData inputData = new AddEventInputData(
+                    id,
+                    "Title",
+                    start,
+                    end,
+                    "Location",
+                    Event.CategoryType.MEETING,
+                    "Reminder message"
+            );
+
+            assertEquals(id, inputData.getId());
+            assertEquals("Title", inputData.getTitle());
+            assertEquals(start, inputData.getStart());
+            assertEquals(end, inputData.getEnd());
+            assertEquals("Location", inputData.getLocation());
+            assertEquals(Event.CategoryType.MEETING, inputData.getCategory());
+            assertEquals("Reminder message", inputData.getReminder());
+        }
+
+        @Test
+        void testAddEventOutputDataGetters() {
+            Event event = new Event(
+                    UUID.randomUUID(),
+                    "Title",
+                    LocalDateTime.of(2025, 1, 1, 9, 0),
+                    LocalDateTime.of(2025, 1, 1, 10, 0),
+                    "Office",
+                    Event.CategoryType.WORK,
+                    "Reminder"
+            );
+
+            AddEventOutputData outputData = new AddEventOutputData(
+                    true,
+                    event,
+                    "OK"
+            );
+
+            assertTrue(outputData.getSuccess());
+            assertEquals(event, outputData.getEvent());
+            assertEquals("OK", outputData.getMessage());
+        }
     }
 }

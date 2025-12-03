@@ -41,15 +41,4 @@ public class AddEventInputData {
     public String getLocation() { return location; }
     public Event.CategoryType getCategory() {return category;}
     public String getReminder() {return reminder;}
-
-
-    public enum CategoryType {
-        Business,
-        Gym,
-        Formal,
-        Casual,
-        Class,
-        Coffee,
-    }
-
 }
