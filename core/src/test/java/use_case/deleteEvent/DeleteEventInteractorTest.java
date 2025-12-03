@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDateTime;
 import java.util.*;
 
-        import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 class DeleteEventInteractorTest {
 
@@ -16,6 +16,7 @@ class DeleteEventInteractorTest {
     private static class InMemoryEventRepo implements EventMethodsDataAccessInterface {
 
         private final Map<UUID, Event> store = new HashMap<>();
+        boolean deleteCalled = false;
 
         @Override
         public boolean existById(UUID id) {
@@ -34,12 +35,19 @@ class DeleteEventInteractorTest {
 
         @Override
         public void delete(UUID id) {
+            deleteCalled = true;
             store.remove(id);
         }
 
         @Override
         public List<Event> getEventsForDay(java.time.LocalDate date) {
-            return new ArrayList<>(store.values());
+            List<Event> result = new ArrayList<>();
+            for (Event e : store.values()) {
+                if (e.getStart().toLocalDate().equals(date)) {
+                    result.add(e);
+                }
+            }
+            return result;
         }
     }
     //delete event successfully
@@ -75,6 +83,7 @@ class DeleteEventInteractorTest {
         DeleteEventInputData input = new DeleteEventInputData(id);
 
         interactor.delete(input);
+        assertTrue(repo.deleteCalled);
     }
 
     // delete event does not exist
@@ -98,5 +107,6 @@ class DeleteEventInteractorTest {
         DeleteEventInputData input = new DeleteEventInputData(missingId);
 
         interactor.delete(input);
+        assertFalse(repo.deleteCalled);
     }
 }
