@@ -70,10 +70,42 @@
 }
 
 /* Color variants by category */
-.pill-course   { -fx-background-color: #3b82f6; }
-.pill-exam     { -fx-background-color: #f97316; }
-.pill-life     { -fx-background-color: #22c55e; }
-.pill-work     { -fx-background-color: #a855f7; }
+/* --- Event category colors --- */
+
+/* CASUAL → .pill-casual */
+.pill-casual {
+    -fx-background-color: #4CAF50; /* green */
+}
+
+/* WORK → .pill-work */
+.pill-business {
+    -fx-background-color: #2196F3; /* blue */
+}
+
+/* STUDY → .pill-study */
+.pill-gym {
+    -fx-background-color: #9C27B0; /* purple */
+}
+
+/* IMPORTANT → .pill-important */
+.pill-formal {
+    -fx-background-color: #F44336; /* red */
+}
+
+/* HEALTH → .pill-health */
+.pill-work {
+    -fx-background-color: #FF9800; /* orange */
+}
+
+/* OFFICE → .pill-office */
+.pill-office {
+    -fx-background-color: #607D8B; /* grey-blue */
+}
+
+/* MEETING → .pill-meeting */
+.pill-meeting {
+    -fx-background-color: #650505; /* grey-blue */
+}
 
 .event-more {
     -fx-font-size: 9px;
